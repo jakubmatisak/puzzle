@@ -95,7 +95,7 @@ export function createRecordingUi({ root, game, i18n }) {
 
   /** Spustí nahrávanie aktuálnej úlohy. */
   function start() {
-    if (!game.getCurrent()) return;
+    if (!game.getCurrent() || recorder.state !== 'idle') return; // napr. druhý klik počas zastavovania
     clearResult();
     note.hidden = true;
     puzzleId = game.getCurrent().id;
