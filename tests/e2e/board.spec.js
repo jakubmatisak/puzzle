@@ -202,7 +202,7 @@ test.describe('board (mouse + keyboard)', () => {
 test.describe('board (touch + layout)', () => {
   test('touch drag via CDP snaps the match and does not scroll the page', async ({ page }, info) => {
     test.skip(info.project.name !== 'mobile-chrome', 'CDP touch only in mobile-chrome');
-    await page.setViewportSize({ width: 412, height: 560 }); // stránka sa dá posúvať
+    await page.setViewportSize({ width: 412, height: 560 }); // nízke okno: dotyk na doske nesmie nič posunúť
     await openBoard(page);
     const from = await slotCenter(page, 'c0.b');
     const to = await slotCenter(page, 'c4.b');
@@ -272,12 +272,14 @@ test.describe('board (touch + layout)', () => {
     await expect(page.locator(`#board .match[data-match="${id}"]`)).toHaveAttribute('transform', /rotate\(45/);
   });
 
-  test('touch swipe outside the board scrolls the page', async ({ page }, info) => {
+  test('touch swipe on a content page scrolls it (only the board blocks touch scrolling)', async ({ page }, info) => {
     test.skip(info.project.name !== 'mobile-chrome', 'CDP touch only in mobile-chrome');
-    await page.setViewportSize({ width: 412, height: 560 }); // nižšie okno, aby sa stránka dala posúvať
-    await openBoard(page);
+    await page.setViewportSize({ width: 412, height: 560 });
+    // herná obrazovka sa už neposúva (fit.spec.js), preto swipe overujeme na návode
+    await page.goto('./#/help');
+    await expect(page.locator('#view-help article[lang="sk"]')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight)).toBe(true);
-    const box = await page.locator('.play-head').boundingBox();
+    const box = await page.locator('#view-help article[lang="sk"] .help-header').boundingBox();
     const cdp = await page.context().newCDPSession(page);
     const x = Math.round(box.x + 20);
     const y0 = Math.round(box.y + box.height - 5);

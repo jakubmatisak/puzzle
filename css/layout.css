@@ -167,6 +167,22 @@
   }
 }
 
+/* Najužšie telefóny (320 px): menšie odstupy, aby sa hlavička nezalomila do dvoch riadkov */
+@media (width < 360px) {
+  .brand {
+    gap: var(--space-1);
+  }
+
+  .brand-name {
+    font-size: 1.05rem;
+  }
+
+  .site-nav-link,
+  .lang-toggle {
+    padding: 0 var(--space-1);
+  }
+}
+
 /* ---------- Hlavný obsah ---------- */
 .site-main {
   flex: 1;
@@ -502,44 +518,84 @@
   }
 }
 
-/* ---------- Hra ---------- */
+/* ---------- Hra: celá obrazovka bez posúvania ---------- */
+
+/* Herná obrazovka je „aplikácia“: stránka má presne výšku okna (dvh = bez lišty prehliadača
+   na mobile), hlavička, zadanie a ovládanie majú svoju výšku a doska dostane zvyšok miesta. */
+@media screen {
+  body:has(#view-play:not([hidden])) {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  body:has(#view-play:not([hidden])) .site-footer {
+    display: none;
+  }
+
+  body:has(#view-play:not([hidden])) .site-main {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-top: var(--space-4);
+    padding-bottom: 0;
+  }
+}
+
+/* Nízka alebo úzka obrazovka: hlavička počas hry šetrí výškou */
+@media screen and (height < 700px), screen and (width < 600px) {
+  body:has(#view-play:not([hidden])) .site-header-inner {
+    padding-top: calc(2px + env(safe-area-inset-top));
+    padding-bottom: 2px;
+  }
+
+  body:has(#view-play:not([hidden])) .brand-tagline {
+    display: none;
+  }
+
+  body:has(#view-play:not([hidden])) .brand-icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.view-play {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Základ (telefón na výšku): zadanie, doska, hláška a lišta ovládania pod sebou */
 .play {
   display: grid;
-  grid-template-areas:
-    "head"
-    "board"
-    "message"
-    "rec"
-    "controls";
-  gap: var(--space-4);
-}
-
-.rec-area {
-  display: grid;
-  grid-area: rec;
-  gap: var(--space-3);
-  justify-items: start;
-}
-
-.rec-area:not(:has(> :not([hidden]))) {
-  display: none;
+  flex: 1;
+  grid-template:
+    "head" auto
+    "board" minmax(0, 1fr)
+    "message" auto
+    "controls" auto / minmax(0, 1fr);
+  gap: var(--space-2);
+  min-height: 0;
 }
 
 .play-head {
   display: grid;
   grid-area: head;
-  grid-template-columns: 1fr auto;
-  gap: var(--space-2) var(--space-4);
-  align-items: end;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0 var(--space-2);
+  align-items: center;
 }
 
 .back-link {
   display: inline-flex;
-  grid-column: 1 / -1;
   gap: var(--space-2);
   align-items: center;
-  justify-self: start;
+  justify-content: center;
+  min-width: var(--tap);
   min-height: var(--tap);
+  margin-left: calc(-1 * var(--space-2));
+  padding: 0 var(--space-2);
+  border-radius: var(--radius);
   color: var(--ink-soft);
   font-size: var(--step-minus-1);
   font-weight: 600;
@@ -547,26 +603,44 @@
 }
 
 .back-link:hover {
+  background: var(--paper-deep);
   color: var(--ink);
 }
 
+/* Na telefóne je späť iba šípka; text ostáva pre čítačky obrazovky */
+@media (width < 600px), (height < 500px) {
+  .back-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 .play-title {
-  font-size: var(--step-2);
+  min-width: 0;
+  font-size: var(--step-1);
+  overflow-wrap: anywhere;
 }
 
 .task-text {
-  grid-column: 1;
+  grid-column: 1 / -1;
   color: var(--ink-soft);
+  font-size: var(--step-minus-1);
+  line-height: 1.4;
 }
 
 .moves {
-  grid-row: 2 / span 2;
-  grid-column: 2;
-  align-self: center;
-  padding: var(--space-1) var(--space-3);
+  grid-row: 1;
+  grid-column: 3;
+  padding: 0.1em var(--space-3);
   border: 1.5px solid var(--line-strong);
   border-radius: 999px;
   background: var(--surface);
+  font-size: var(--step-minus-1);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   white-space: nowrap;
@@ -578,14 +652,13 @@
   color: #fff;
 }
 
+/* Hláška má vždy rezervovaný riadok, aby sa doska pri krátkej rade neposúvala */
 .message {
   grid-area: message;
-  min-height: 1.6em;
+  min-height: 1.4em;
+  font-size: var(--step-minus-1);
   font-weight: 600;
-}
-
-.message:empty {
-  min-height: 0;
+  line-height: 1.4;
 }
 
 /* Počas karty úspechu hláška ostáva iba pre čítačky obrazovky (inak by sa text zobrazil dvakrát). */
@@ -601,34 +674,43 @@
   border: 0;
 }
 
+/* Lišta ovládania: 2 riadky tlačidiel (ikona nad krátkym popisom) cez celú šírku obrazovky */
 .controls {
-  position: sticky;
-  bottom: 0;
-  z-index: 5;
   display: grid;
   grid-area: controls;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-2);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-1);
 
   /* Lišta siaha cez celý okraj .site-main (rovnaký výraz ako jeho padding vrátane safe-area) */
   margin-inline:
     calc(-1 * max(var(--space-4), env(safe-area-inset-left)))
     calc(-1 * max(var(--space-4), env(safe-area-inset-right)));
   padding:
-    var(--space-3)
-    max(var(--space-4), env(safe-area-inset-right))
-    calc(var(--space-3) + env(safe-area-inset-bottom))
-    max(var(--space-4), env(safe-area-inset-left));
+    var(--space-2)
+    max(var(--space-2), env(safe-area-inset-right))
+    calc(var(--space-2) + env(safe-area-inset-bottom))
+    max(var(--space-2), env(safe-area-inset-left));
   border-top: 1.5px solid var(--line);
   background: var(--surface);
 }
 
+/* 7 alebo 8 viditeľných tlačidiel (s „Ďalším riešením“ či „Povoliť senzory“) = 4 stĺpce */
+.controls:has(> :nth-child(7 of :not([hidden]))) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* „Ďalšia úloha“ je posledná; pri nepárnom počte tlačidiel zaberie dve bunky (v lište nie je diera) */
+.controls > .btn-primary:nth-child(odd of :not([hidden])) {
+  grid-column: span 2;
+}
+
 .btn-tool {
   flex-direction: column;
-  gap: 0.2rem;
-  min-height: 3.5rem;
-  padding: var(--space-2) var(--space-1);
-  font-size: var(--step-minus-1);
+  gap: 0.15rem;
+  min-width: 0;
+  padding: var(--space-1) 2px;
+  font-size: 0.78rem;
+  line-height: 1.15;
   text-align: center;
 }
 
@@ -636,169 +718,78 @@
   color: var(--head-1);
 }
 
-/* Telefón: „Ďalšia úloha“ cez celý riadok, ostatné tlačidlá bez dier v mriežke
-   (5 tlačidiel = 3 + 2, so „Ďalším riešením“ vedľa „Riešenia“ = 3 + 3). */
-@media (width < 600px) {
-  .controls {
-    grid-template-areas:
-      "hint hint solution solution reset reset"
-      "rotate rotate rotate record record record"
-      "next next next next next next";
-    grid-template-columns: repeat(6, 1fr);
-  }
-
-  .controls:has([data-action="next-solution"]:not([hidden])) {
-    grid-template-areas:
-      "hint hint solution solution alt alt"
-      "reset reset rotate rotate record record"
-      "next next next next next next";
-  }
-
-  /* Zameraný prvok nahrávky (napr. „Stiahnuť video“) sa nezastaví pod prilepenou lištou */
-  .rec-area :focus {
-    scroll-margin-bottom: 14rem;
-  }
-
-  .controls [data-action="hint"] { grid-area: hint; }
-  .controls [data-action="solution"] { grid-area: solution; }
-  .controls [data-action="next-solution"] { grid-area: alt; }
-  .controls [data-action="reset"] { grid-area: reset; }
-  .controls [data-action="rotate"] { grid-area: rotate; }
-  .controls [data-action="record"] { grid-area: record; }
-  .controls [data-action="next"] { grid-area: next; }
-
-  /* Tlačidlo povolenia senzorov (iOS) dostane vlastný riadok nad „Ďalšou úlohou“ */
-  .controls:has(#sensors-btn:not([hidden])) {
-    grid-template-areas:
-      "hint hint solution solution reset reset"
-      "rotate rotate rotate record record record"
-      "sensors sensors sensors sensors sensors sensors"
-      "next next next next next next";
-  }
-
-  .controls:has(#sensors-btn:not([hidden])):has([data-action="next-solution"]:not([hidden])) {
-    grid-template-areas:
-      "hint hint solution solution alt alt"
-      "reset reset rotate rotate record record"
-      "sensors sensors sensors sensors sensors sensors"
-      "next next next next next next";
-  }
-
-  .controls #sensors-btn {
-    grid-area: sensors;
-    flex-direction: row;
-    min-height: var(--tap);
-  }
-
-  .controls .btn-primary {
-    flex-direction: row;
-    min-height: var(--tap);
-  }
-}
-
-/* Tablet: tlačidlá v jednom riadku; ak sa nezmestia, „Ďalšia úloha“ sa roztiahne na celý riadok
+/* Tablet na výšku: tlačidlá v jednom riadku; ak sa nezmestia, „Ďalšia úloha“ sa roztiahne
    (flex namiesto mriežky, aby nevznikla osamotená bunka). */
-@media (600px <= width < 900px) {
+@media (width >= 600px) and (height >= 500px) {
+  body:has(#view-play:not([hidden])) .site-main {
+    padding-top: var(--space-5);
+  }
+
+  .play {
+    gap: var(--space-3);
+  }
+
+  .play-head {
+    gap: var(--space-1) var(--space-3);
+  }
+
+  .play-title {
+    font-size: var(--step-2);
+  }
+
+  .task-text,
+  .moves,
+  .message {
+    font-size: var(--step-0);
+  }
+
   .controls {
     display: flex;
     flex-wrap: wrap;
+    gap: var(--space-2);
+    padding:
+      var(--space-3)
+      max(var(--space-4), env(safe-area-inset-right))
+      calc(var(--space-3) + env(safe-area-inset-bottom))
+      max(var(--space-4), env(safe-area-inset-left));
   }
 
   .controls > .btn {
     flex: 1 1 6.5rem;
   }
 
+  .btn-tool {
+    min-height: 3.5rem;
+    padding: var(--space-2) var(--space-1);
+    font-size: var(--step-minus-1);
+  }
+
   .controls .btn-primary {
     flex-direction: row;
     min-height: var(--tap);
   }
 }
 
-/* Nízka obrazovka (telefón na šírku): lišta by zakryla dosku, preto nie je prilepená */
-@media (height < 500px) {
-  .controls {
-    position: static;
-  }
-}
-
-/* Telefón na šírku: doska vľavo na výšku okna, zadanie a ovládanie vpravo */
-@media (height < 500px) and (600px <= width < 900px) {
-  .site-main {
-    padding-top: var(--space-3);
+/* Od 900 px: zadanie hore, doska vľavo, panel ovládania a hláška vpravo */
+@media (width >= 900px) and (height >= 500px) {
+  body:has(#view-play:not([hidden])) .site-main {
+    padding-bottom: var(--space-5);
   }
 
-  .brand-tagline {
-    display: none;
-  }
-
-  .play {
-    grid-template:
-      "board head" auto
-      "board message" auto
-      "board controls" 1fr
-      "rec rec" auto / minmax(0, 1fr) 14rem;
-    gap: var(--space-2) var(--space-4);
-  }
-
-  .play-head {
-    grid-template-columns: 1fr;
-    gap: var(--space-1);
-  }
-
-  .play-title {
-    font-size: var(--step-1);
-  }
-
-  .moves {
-    grid-row: auto;
-    grid-column: 1;
-    justify-self: start;
-  }
-
-  .board-wrap {
-    align-self: start;
-  }
-
-  .board {
-    max-height: calc(100svh - 6.5rem);
-  }
-
-  .controls {
-    align-self: start;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: none;
-  }
-
-  .controls > .btn {
-    flex-basis: 6rem;
-  }
-
-  .controls > .btn-primary {
-    flex-basis: 100%;
-  }
-
-  .btn-tool {
-    flex-direction: row;
-    min-height: var(--tap);
-    padding: var(--space-1) var(--space-2);
-  }
-}
-
-/* Od 900 px: doska vľavo, panel ovládania vpravo */
-@media (width >= 900px) {
   .play {
     grid-template:
       "head head" auto
       "board controls" auto
-      "board message" 1fr
-      "rec rec" auto / minmax(0, 1fr) 17rem;
+      "board message" minmax(0, 1fr) / minmax(0, 1fr) 17rem;
     gap: var(--space-4) var(--space-5);
   }
 
+  /* Dlhá hláška sa posúva vo vnútri panelu, stránka nie */
   .message {
     align-self: start;
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: auto;
     padding: var(--space-3) var(--space-4);
     border-left: 4px solid var(--accent);
     border-radius: var(--radius-sm);
@@ -810,7 +801,7 @@
   }
 
   .controls {
-    position: static;
+    display: grid;
     grid-template-columns: 1fr;
     align-self: start;
     margin: 0;
@@ -819,6 +810,14 @@
     border-radius: var(--radius);
     background: var(--surface);
     box-shadow: inset 0 0 0 4px var(--surface), inset 0 0 0 5.5px var(--line), var(--shadow-md);
+  }
+
+  .controls:has(> :nth-child(7 of :not([hidden]))) {
+    grid-template-columns: 1fr;
+  }
+
+  .controls > .btn-primary:nth-child(odd of :not([hidden])) {
+    grid-column: auto;
   }
 
   .btn-tool {
@@ -831,6 +830,69 @@
 
   .btn-tool.btn-primary {
     margin-top: var(--space-2);
+  }
+}
+
+/* Telefón na šírku (nízke okno): zadanie v úzkom pruhu hore, doska vľavo, ovládanie vpravo */
+@media (height < 500px) and (orientation: landscape) {
+  body:has(#view-play:not([hidden])) .site-main {
+    padding-top: var(--space-3);
+    padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom));
+  }
+
+  .play {
+    grid-template:
+      "head head" auto
+      "board controls" auto
+      "board message" minmax(0, 1fr) / minmax(0, 1fr) 13.5rem;
+    gap: var(--space-1) var(--space-3);
+  }
+
+  .play-head {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    gap: var(--space-3);
+  }
+
+  .moves {
+    grid-column: 4;
+  }
+
+  .task-text {
+    grid-row: 1;
+    grid-column: 3;
+    font-size: 0.8rem;
+    line-height: 1.25;
+  }
+
+  .message {
+    align-self: start;
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: auto;
+  }
+
+  .controls,
+  .controls:has(> :nth-child(7 of :not([hidden]))) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-self: start;
+    margin: var(--space-1) 0 0;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .controls > .btn-primary:nth-child(odd of :not([hidden])) {
+    grid-column: 1 / -1;
+  }
+
+  .btn-tool {
+    flex-direction: row;
+    gap: var(--space-1);
+    justify-content: flex-start;
+    min-height: var(--tap);
+    padding: 2px var(--space-2);
+    font-size: 0.8rem;
+    text-align: left;
   }
 }
 
@@ -1021,12 +1083,39 @@ html[lang="en"] .help[lang="sk"] {
 }
 
 /* ---------- Nahrávanie videa ---------- */
+
+/* Indikátor, hláška aj panel s videom ležia nad doskou (rovnaká oblasť mriežky),
+   takže pri nahrávaní nič nepribudne pod dosku a stránka sa neposúva.
+   container-type: výška videa sa prispôsobí výške dosky (jednotka cqh). */
+.rec-area {
+  z-index: 4;
+  display: flex;
+  grid-area: board;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--space-2);
+  pointer-events: none;
+  container-type: size;
+}
+
+.rec-area:not(:has(> :not([hidden]))) {
+  display: none;
+}
+
 .rec-indicator {
   display: inline-flex;
   gap: var(--space-2);
   align-items: center;
   margin: 0;
+  padding: 0.1em var(--space-3);
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
   color: var(--head-1);
+  font-size: var(--step-minus-1);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
 }
@@ -1047,25 +1136,30 @@ html[lang="en"] .help[lang="sk"] {
 
 .record-note {
   margin: 0;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
   color: var(--ink-soft);
   font-size: var(--step-minus-1);
 }
 
 .recording {
   display: grid;
-  gap: var(--space-3);
-  max-width: 34rem;
-  padding: var(--space-3);
+  gap: var(--space-2);
+  max-width: min(34rem, 100%);
+  padding: var(--space-2);
   border: 2px solid var(--frame);
   border-radius: var(--radius);
   background: var(--surface);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
 }
 
+/* Video sa zmenší tak, aby sa panel aj s tlačidlami zmestil do výšky dosky */
 .recording-video video {
   display: block;
-  width: 100%;
-  max-height: 50vh;
+  max-width: 100%;
+  max-height: calc(100cqh - 5.5rem);
   border-radius: var(--radius-sm);
   background: #000;
 }
