@@ -1,0 +1,496 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "id": "numbers",
+      "kind": "equation",
+      "name": {
+        "sk": "Rovnice",
+        "en": "Equations"
+      },
+      "description": {
+        "sk": "Presuň zápalku tak, aby rovnica platila.",
+        "en": "Move a match to make the equation true."
+      }
+    },
+    {
+      "id": "roman",
+      "kind": "equation",
+      "name": {
+        "sk": "Rímske čísla",
+        "en": "Roman numerals"
+      },
+      "description": {
+        "sk": "Rímske číslice sa dajú skladať zo zápaliek aj cez seba.",
+        "en": "Roman numerals built from matches, some crossed over."
+      }
+    },
+    {
+      "id": "logic",
+      "kind": "shapes",
+      "name": {
+        "sk": "Logické útvary",
+        "en": "Shapes"
+      },
+      "description": {
+        "sk": "Odober zápalky tak, aby ostal presný počet útvarov.",
+        "en": "Remove matches to leave an exact number of shapes."
+      }
+    }
+  ],
+  "puzzles": [
+    {
+      "id": "num-01",
+      "category": "numbers",
+      "mode": "move",
+      "moves": 1,
+      "start": "9+4=5",
+      "solutions": [
+        "5+4=9"
+      ],
+      "task": {
+        "sk": "Presuň jednu zápalku tak, aby rovnica platila.",
+        "en": "Move one match so the equation becomes true."
+      },
+      "hint": {
+        "sk": "Skús vymeniť čísla.",
+        "en": "Try swapping the numbers around."
+      }
+    },
+    {
+      "id": "num-02",
+      "category": "numbers",
+      "mode": "move",
+      "moves": 1,
+      "start": "0+3=5",
+      "solutions": [
+        "8-3=5",
+        "0+5=5",
+        "0+3=3"
+      ],
+      "task": {
+        "sk": "Presuň jednu zápalku tak, aby rovnica platila.",
+        "en": "Move one match so the equation becomes true."
+      },
+      "hint": {
+        "sk": "Zápalku môžeš otočiť, ťuknutím na ňu. Skús zmeniť znamienko.",
+        "en": "You can rotate a match by tapping it. Try changing the sign."
+      }
+    },
+    {
+      "id": "num-03",
+      "category": "numbers",
+      "mode": "move",
+      "moves": 1,
+      "start": "6+4=4",
+      "solutions": [
+        "0+4=4",
+        {
+          "text": "5+4=9",
+          "without": [
+            "c0.e"
+          ],
+          "with": [
+            "c4.a"
+          ]
+        },
+        "8-4=4"
+      ],
+      "task": {
+        "sk": "Presuň jednu zápalku tak, aby rovnica platila.",
+        "en": "Move one match so the equation becomes true."
+      },
+      "hint": {
+        "sk": "Táto úloha má viac riešení. Pozri sa na prvé číslo.",
+        "en": "This puzzle has several solutions. Look at the first number."
+      }
+    },
+    {
+      "id": "num-04",
+      "category": "numbers",
+      "mode": "move",
+      "moves": 1,
+      "start": "2×9=5",
+      "solutions": [
+        "2×3=6"
+      ],
+      "task": {
+        "sk": "Presuň jednu zápalku tak, aby rovnica platila.",
+        "en": "Move one match so the equation becomes true."
+      },
+      "hint": {
+        "sk": "Zmeň dve čísla naraz, znamienko nechaj.",
+        "en": "Change two numbers at once and keep the sign."
+      }
+    },
+    {
+      "id": "num-05",
+      "category": "numbers",
+      "mode": "move",
+      "moves": 1,
+      "start": "2+5<3",
+      "solutions": [
+        "2-5<9",
+        "2-6<3",
+        "2-9<3",
+        {
+          "text": "2+5<9",
+          "without": [
+            "c4.d"
+          ],
+          "with": [
+            "c4.f"
+          ]
+        }
+      ],
+      "task": {
+        "sk": "Presuň jednu zápalku tak, aby nerovnica platila.",
+        "en": "Move one match so the inequality becomes true."
+      },
+      "hint": {
+        "sk": "Skús zmeniť znamienko alebo posledné číslo.",
+        "en": "Try changing the sign or the last number."
+      }
+    },
+    {
+      "id": "num-06",
+      "category": "numbers",
+      "mode": "move",
+      "moves": 1,
+      "start": "6+7=12",
+      "solutions": [
+        "6+7=13",
+        {
+          "text": "5+7=12",
+          "without": [
+            "c0.e"
+          ],
+          "with": [
+            "c2.f"
+          ]
+        }
+      ],
+      "task": {
+        "sk": "Presuň jednu zápalku tak, aby rovnica platila.",
+        "en": "Move one match so the equation becomes true."
+      },
+      "hint": {
+        "sk": "Dvojciferné číslo sa dá upraviť aj zľava, aj sprava.",
+        "en": "A two-digit number can be changed on either side."
+      }
+    },
+    {
+      "id": "rom-01",
+      "category": "roman",
+      "mode": "move",
+      "moves": 1,
+      "start": "VIII+I=VII ",
+      "solutions": [
+        "VII +I=VIII"
+      ],
+      "task": {
+        "sk": "Presuň jednu zápalku tak, aby rímska rovnica platila.",
+        "en": "Move one match so the Roman numeral equation becomes true."
+      },
+      "hint": {
+        "sk": "Jedna zápalka sa dá presunúť z jedného čísla do druhého.",
+        "en": "One match can move from one number to another."
+      }
+    },
+    {
+      "id": "rom-02",
+      "category": "roman",
+      "mode": "move",
+      "moves": 1,
+      "start": "XI=VIII-II",
+      "solutions": [
+        "X =VIII+II"
+      ],
+      "task": {
+        "sk": "Presuň jednu zápalku tak, aby rímska rovnica platila.",
+        "en": "Move one match so the Roman numeral equation becomes true."
+      },
+      "hint": {
+        "sk": "Znamienko mínus sa dá zmeniť pridaním zápalky.",
+        "en": "A minus sign can change by adding a match."
+      }
+    },
+    {
+      "id": "rom-03",
+      "category": "roman",
+      "mode": "move",
+      "moves": 1,
+      "start": "II >III",
+      "solutions": [
+        "III>II "
+      ],
+      "task": {
+        "sk": "Presuň jednu zápalku tak, aby nerovnica platila.",
+        "en": "Move one match so the inequality becomes true."
+      },
+      "hint": {
+        "sk": "Obe čísla sa menia.",
+        "en": "Both numbers change."
+      }
+    },
+    {
+      "id": "rom-04",
+      "category": "roman",
+      "mode": "move",
+      "moves": 1,
+      "start": "II×II =VII",
+      "solutions": [
+        "II×III=VI "
+      ],
+      "task": {
+        "sk": "Presuň jednu zápalku tak, aby rímska rovnica platila.",
+        "en": "Move one match so the Roman numeral equation becomes true."
+      },
+      "hint": {
+        "sk": "Skús upraviť hlavne číslo za znakom rovnosti.",
+        "en": "Pay most attention to the numbers around the equals sign."
+      }
+    },
+    {
+      "id": "rom-05",
+      "category": "roman",
+      "mode": "move",
+      "moves": 1,
+      "start": "IV-I=VI",
+      "solutions": [
+        "IV+I=V ",
+        " V+I=VI"
+      ],
+      "task": {
+        "sk": "Presuň jednu zápalku tak, aby rímska rovnica platila.",
+        "en": "Move one match so the Roman numeral equation becomes true."
+      },
+      "hint": {
+        "sk": "Táto úloha má dve riešenia. Zápalky sa dajú skladať aj cez seba.",
+        "en": "This puzzle has two solutions. Matches can be crossed over each other."
+      }
+    },
+    {
+      "id": "rom-06",
+      "category": "roman",
+      "mode": "move",
+      "moves": 1,
+      "start": "IX-V= VI",
+      "solutions": [
+        "IX-V=IV "
+      ],
+      "task": {
+        "sk": "Presuň jednu zápalku tak, aby rímska rovnica platila.",
+        "en": "Move one match so the Roman numeral equation becomes true."
+      },
+      "hint": {
+        "sk": "Pozri sa na výsledok.",
+        "en": "Look at the result."
+      }
+    },
+    {
+      "id": "log-01",
+      "category": "logic",
+      "mode": "remove",
+      "moves": 2,
+      "board": {
+        "type": "grid",
+        "rows": 2,
+        "cols": 2
+      },
+      "start": "all",
+      "goal": {
+        "shape": "square",
+        "count": 2,
+        "noLoose": true
+      },
+      "solutions": [
+        {
+          "without": [
+            "h1-0",
+            "v0-1"
+          ]
+        }
+      ],
+      "task": {
+        "sk": "Odober 2 zápalky tak, aby ostali presne 2 štvorce a žiadna zápalka navyše.",
+        "en": "Remove 2 matches so that exactly 2 squares remain and no match is left over."
+      },
+      "hint": {
+        "sk": "Skús odobrať zápalky zo stredu.",
+        "en": "Try removing matches from the middle."
+      }
+    },
+    {
+      "id": "log-02",
+      "category": "logic",
+      "mode": "remove",
+      "moves": 2,
+      "board": {
+        "type": "grid",
+        "rows": 2,
+        "cols": 2
+      },
+      "start": "all",
+      "goal": {
+        "shape": "square",
+        "count": 3,
+        "noLoose": true
+      },
+      "solutions": [
+        {
+          "without": [
+            "h0-1",
+            "v0-2"
+          ]
+        }
+      ],
+      "task": {
+        "sk": "Odober 2 zápalky tak, aby ostali presne 3 štvorce a žiadna zápalka navyše.",
+        "en": "Remove 2 matches so that exactly 3 squares remain and no match is left over."
+      },
+      "hint": {
+        "sk": "Jeden zo štvorcov bude väčší.",
+        "en": "One of the squares will be larger."
+      }
+    },
+    {
+      "id": "log-03",
+      "category": "logic",
+      "mode": "remove",
+      "moves": 4,
+      "board": {
+        "type": "grid",
+        "rows": 3,
+        "cols": 3
+      },
+      "start": "all",
+      "goal": {
+        "shape": "square",
+        "count": 5,
+        "noLoose": true
+      },
+      "solutions": [
+        {
+          "without": [
+            "h1-1",
+            "h2-1",
+            "v1-1",
+            "v1-2"
+          ]
+        }
+      ],
+      "task": {
+        "sk": "Odober 4 zápalky tak, aby ostalo presne 5 štvorcov a žiadna zápalka navyše.",
+        "en": "Remove 4 matches so that exactly 5 squares remain and no match is left over."
+      },
+      "hint": {
+        "sk": "Započítaj aj najväčší štvorec.",
+        "en": "Count the largest square too."
+      }
+    },
+    {
+      "id": "log-04",
+      "category": "logic",
+      "mode": "remove",
+      "moves": 8,
+      "board": {
+        "type": "grid",
+        "rows": 3,
+        "cols": 3
+      },
+      "start": "all",
+      "goal": {
+        "shape": "square",
+        "count": 2,
+        "noLoose": true
+      },
+      "solutions": [
+        {
+          "without": [
+            "h1-0",
+            "h1-2",
+            "h2-0",
+            "h2-2",
+            "v0-1",
+            "v0-2",
+            "v2-1",
+            "v2-2"
+          ]
+        }
+      ],
+      "task": {
+        "sk": "Odober 8 zápaliek tak, aby ostali presne 2 štvorce a žiadna zápalka navyše.",
+        "en": "Remove 8 matches so that exactly 2 squares remain and no match is left over."
+      },
+      "hint": {
+        "sk": "Zachovaj veľký a malý štvorec.",
+        "en": "Keep one large and one small square."
+      }
+    },
+    {
+      "id": "log-05",
+      "category": "logic",
+      "mode": "remove",
+      "moves": 1,
+      "board": {
+        "type": "trigrid",
+        "n": 2
+      },
+      "start": "all",
+      "goal": {
+        "shape": "triangle",
+        "count": 3,
+        "noLoose": true
+      },
+      "solutions": [
+        {
+          "without": [
+            "a1-0"
+          ]
+        }
+      ],
+      "task": {
+        "sk": "Odober 1 zápalku tak, aby ostali presne 3 trojuholníky a žiadna zápalka navyše.",
+        "en": "Remove 1 match so that exactly 3 triangles remain and no match is left over."
+      },
+      "hint": {
+        "sk": "Pozri sa na vrchol útvaru.",
+        "en": "Look at the top of the shape."
+      }
+    },
+    {
+      "id": "log-06",
+      "category": "logic",
+      "mode": "remove",
+      "moves": 3,
+      "board": {
+        "type": "trigrid",
+        "n": 2
+      },
+      "start": "all",
+      "goal": {
+        "shape": "triangle",
+        "count": 1,
+        "noLoose": true
+      },
+      "solutions": [
+        {
+          "without": [
+            "a1-0",
+            "r1-0",
+            "l1-1"
+          ]
+        }
+      ],
+      "task": {
+        "sk": "Odober 3 zápalky tak, aby ostal presne 1 trojuholník a žiadna zápalka navyše.",
+        "en": "Remove 3 matches so that exactly 1 triangle remains and no match is left over."
+      },
+      "hint": {
+        "sk": "Skús ponechať iba jeden malý trojuholník.",
+        "en": "Try keeping just one small triangle."
+      }
+    }
+  ]
+}

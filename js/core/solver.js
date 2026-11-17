@@ -15,7 +15,7 @@ function combinations(items, k) {
   return out;
 }
 
-/** Je dekódovaný text pravdivá rovnica? */
+/** Je dekÃ³dovanÃ½ text pravdivÃ¡ rovnica? */
 function isTrue(text, types) {
   return evaluate(tokenize([...text].map((ch, i) => ({ type: types[i], ch }))));
 }
