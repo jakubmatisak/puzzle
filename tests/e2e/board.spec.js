@@ -458,3 +458,50 @@ test.describe('animatePlan (test hook window.__zapalkovoBoard)', () => {
     await expect(match(page, 'c4.b')).toHaveCount(1);
   });
 });
+
+test.describe('roman X from two matches (rom-04)', () => {
+  test.beforeEach(async ({ page }, info) => {
+    test.skip(info.project.name === 'mobile-chrome', 'mouse flow runs on desktop projects');
+    await page.goto('./#/play/roman?puzzle=rom-04');
+    await page.waitForFunction(() => window.__zapalkovoGame?.getCurrent()?.id === 'rom-04');
+  });
+
+  /** Stav zápalky cez testovací háčik. */
+  const readMatch = (page, id) => page.evaluate(
+    (mid) => window.__zapalkovoBoard.getState().matches.find((m) => m.id === mid),
+    id,
+  );
+
+  /** Bod na osi zápalky 20 jednotiek od stredu (stred X je spoločný dvom zápalkám). */
+  async function grab(page, id) {
+    const m = await readMatch(page, id);
+    const rad = (m.angle * Math.PI) / 180;
+    return svgToScreen(page, m.x + 20 * Math.cos(rad), m.y + 20 * Math.sin(rad));
+  }
+
+  /** Dvojklik na zápalku, kým neleží v slote `slot` (najviac 4 otočenia). */
+  async function rotateInto(page, id, slot) {
+    for (let i = 0; i < 4 && (await readMatch(page, id)).slot !== slot; i += 1) {
+      const p = await grab(page, id);
+      await page.mouse.dblclick(p.x, p.y);
+    }
+    expect((await readMatch(page, id)).slot).toBe(slot);
+  }
+
+  test('two matches dropped into the empty cell and rotated form X', async ({ page }) => {
+    const a = await match(page, 'c0.i').getAttribute('data-match');
+    const b = await match(page, 'c1.i').getAttribute('data-match');
+    await mouseDrag(page, await slotCenter(page, 'c0.i'), await slotCenter(page, 'c5.i'));
+    expect((await readMatch(page, a)).slot).toBe('c5.i');
+    const once = await grab(page, a);
+    await page.mouse.dblclick(once.x, once.y);
+    expect((await readMatch(page, a)).slot).toBe('c5.xb');
+    await mouseDrag(page, await slotCenter(page, 'c1.i'), await slotCenter(page, 'c5.i'));
+    expect((await readMatch(page, b)).slot).toBe('c5.i');
+    await rotateInto(page, b, 'c5.xa');
+    const cell = await page.locator('#board .match').evaluateAll(
+      (els) => els.map((e) => e.dataset.slot).filter((s) => s.startsWith('c5.')).sort(),
+    );
+    expect(cell).toEqual(['c5.xa', 'c5.xb']); // ENCODE.roman.X
+  });
+});

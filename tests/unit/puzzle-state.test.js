@@ -179,3 +179,19 @@ describe('rotateMatch (R7: vždy uvoľní slot)', () => {
     expect(() => rotateMatch(s, 'nope', p.board)).toThrow();
   });
 });
+
+describe('rímske X sa dá poskladať otáčaním', () => {
+  const board = buildBoard(layoutEquation(['X']).slots);
+
+  it('zvislá zápalka v slote I sa otočením (135°) prichytí do xb', () => {
+    const s = { matches: [{ id: 'm0', slot: 'c0.i', x: 34, y: 100, angle: 90 }] };
+    const t = rotateMatch(s, 'm0', board);
+    expect(t.matches[0].slot).toBe('c0.xb');
+  });
+
+  it('zápalka otočená na 45° sa prichytí do xa', () => {
+    const s = { matches: [{ id: 'm0', slot: null, x: 34, y: 100, angle: 0 }] };
+    const t = rotateMatch(s, 'm0', board);
+    expect(t.matches[0].slot).toBe('c0.xa');
+  });
+});
