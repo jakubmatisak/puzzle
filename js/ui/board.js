@@ -3,14 +3,17 @@
  * a ich ovládanie myšou, prstom (Pointer Events) aj klávesnicou.
  * Stav úlohy sa mení iba cez funkcie z puzzle-state.js.
  */
-import { angleDiff, distance, findSnapSlot, rotateStep } from '../core/geometry.js';
+import {
+  angleDiff, distance, findSnapSlot, rotateStep, segmentDistance,
+} from '../core/geometry.js';
 import {
   moveToSlot, moveToTray, occupied, rotateMatch, trayMatches, trayPosition,
 } from '../core/puzzle-state.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const HALF = 50; // polovica dĺžky zápalky
-const CLICK_MOVE = 5; // menší pohyb (v jednotkách SVG) je klik, nie ťah
+const CLICK_PX = 8; // menší pohyb prsta/myši (v CSS px) je klik, nie ťah
+const GRAB_PX = 22; // zápalku chytí stlačenie do 22 CSS px od jej osi
 const DOUBLE_CLICK_MS = 300;
 const KEY_STEP = 10; // posun šípkou
 const SNAP = { radius: 45, maxAngle: 23 };
@@ -60,11 +63,10 @@ function createSlot(slot) {
   });
 }
 
-/** Skupina zápalky: neviditeľná plocha na chytenie, palička a hlavička. */
+/** Skupina zápalky: palička a zaoblená hlavička. */
 function createMatch(match) {
   const g = svgEl('g', { class: 'match', 'data-match': match.id, tabindex: 0, role: 'button' });
   g.append(
-    svgEl('rect', { class: 'match-hit', x: -54, y: -20, width: 108, height: 40 }),
     svgEl('rect', { class: 'match-stick', x: -50, y: -5, width: 88, height: 10, rx: 4 }),
     svgEl('ellipse', { class: 'match-head', cx: 40, cy: 0, rx: 11, ry: 8 }),
   );
@@ -80,7 +82,7 @@ function insideRect(p, r) {
 function clampToTray(p, tray) {
   const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
   return {
-    x: clamp(p.x, tray.x + 14, tray.x + tray.w - 14),
+    x: clamp(p.x, tray.x + 20, tray.x + tray.w - 20),
     y: clamp(p.y, tray.y + HALF + 12, tray.y + tray.h - HALF - 12),
   };
 }
@@ -118,6 +120,7 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
   let lastClick = null; // {matchId, time}
   let interactive = true;
   let animating = false;
+  let generation = 0; // zvýšenie zastaví bežiacu animáciu riešenia
   const matchEls = new Map();
   const slotEls = new Map();
   const layers = { slots: svgEl('g', { class: 'slots' }), tray: svgEl('g'), matches: svgEl('g', { class: 'matches' }) };
@@ -194,6 +197,12 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
 
   // ---------- stav ----------
 
+  /** Zastaví prípadnú animáciu riešenia (bežiace kroky už nič nezapíšu). */
+  function cancelAnimation() {
+    generation += 1;
+    animating = false;
+  }
+
   /** Nájde zápalku v stave podľa id. */
   function findMatch(matchId) {
     return state.matches.find((m) => m.id === matchId);
@@ -219,6 +228,27 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
   }
 
   // ---------- ťahanie ----------
+
+  /** Koľko CSS px má jedna jednotka SVG (doska sa škáluje rovnako v x aj y). */
+  function screenScale() {
+    const m = svg.getScreenCTM();
+    return Math.hypot(m.a, m.b) || 1;
+  }
+
+  /** Najbližšia zápalka do GRAB_PX od bodu; pri zhode vyhrá tá kreslená vyššie. */
+  function nearestMatch(p) {
+    const limit = GRAB_PX / screenScale();
+    let best = null;
+    let bestDist = Infinity;
+    for (const g of layers.matches.children) {
+      const d = segmentDistance(p, findMatch(g.dataset.match), HALF);
+      if (d <= limit && d <= bestDist) {
+        best = g.dataset.match;
+        bestDist = d;
+      }
+    }
+    return best;
+  }
 
   /** Prepočet bodu z obrazovky do súradníc SVG. */
   function toSvgPoint(clientX, clientY) {
@@ -247,13 +277,13 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
       && distance(drag, s) <= SNAP.radius && angleDiff(drag.angle, s.angle) > SNAP.maxAngle);
   }
 
-  /** Začne ťah zápalky (pointerId null = klávesnica). */
-  function startDrag(matchId, pointerId, grab) {
+  /** Začne ťah zápalky (pointerId null = klávesnica; client = bod na obrazovke). */
+  function startDrag(matchId, pointerId, grab, client) {
     const m = findMatch(matchId);
     drag = {
       matchId, pointerId, x: m.x, y: m.y, angle: m.angle,
       offset: grab ? { x: grab.x - m.x, y: grab.y - m.y } : { x: 0, y: 0 },
-      start: grab ?? { x: m.x, y: m.y },
+      client,
       moved: false,
     };
   }
@@ -313,25 +343,32 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
     return interactive && !animating && board !== null;
   }
 
+  /** Stlačenie kdekoľvek na doske chytí najbližšiu zápalku (tenké zápalky sa chytajú ľahko). */
   function onPointerDown(event) {
     if (!canInteract() || drag) return;
     if (event.pointerType === 'mouse' && event.button !== 0) return;
-    const matchId = matchFromEvent(event);
+    const p = toSvgPoint(event.clientX, event.clientY);
+    const matchId = nearestMatch(p);
     if (!matchId) {
       select(null);
       return;
     }
     matchEls.get(matchId).focus({ preventScroll: true });
     select(matchId);
-    startDrag(matchId, event.pointerId, toSvgPoint(event.clientX, event.clientY));
+    startDrag(matchId, event.pointerId, p, { x: event.clientX, y: event.clientY });
     svg.setPointerCapture(event.pointerId);
     event.preventDefault();
   }
 
   function onPointerMove(event) {
     if (!drag || drag.pointerId !== event.pointerId) return;
+    if (event.pointerType === 'mouse' && event.buttons === 0) {
+      revert(); // tlačidlo bolo pustené mimo nás (napr. mimo okna)
+      return;
+    }
+    const moved = distance({ x: event.clientX, y: event.clientY }, drag.client);
+    if (!drag.moved && moved < CLICK_PX) return;
     const p = toSvgPoint(event.clientX, event.clientY);
-    if (!drag.moved && distance(p, drag.start) < CLICK_MOVE) return;
     moveDrag(p.x - drag.offset.x, p.y - drag.offset.y);
   }
 
@@ -360,7 +397,7 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
     const ownDrag = drag && drag.matchId === matchId;
     if (arrows[event.key]) {
       if (drag && !ownDrag) return;
-      if (!drag) startDrag(matchId, null, null);
+      if (!drag) startDrag(matchId, null, null, null);
       const [dx, dy] = arrows[event.key];
       moveDrag(drag.x + dx * KEY_STEP, drag.y + dy * KEY_STEP);
     } else if (event.key === 'Enter' && ownDrag && drag.moved) {
@@ -395,15 +432,24 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
   svg.addEventListener('focusin', onFocusIn);
   svg.addEventListener('focusout', onFocusOut);
   svg.addEventListener('dblclick', (event) => event.preventDefault());
+  // Okno stratilo fokus alebo sa skrylo: rozpracovaný ťah sa vráti.
+  window.addEventListener('blur', revert);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) revert();
+  });
 
   // ---------- animácia riešenia ----------
 
-  /** Plynulo presunie kresbu zápalky z jednej polohy do druhej. */
-  function tween(matchId, from, to, ms) {
+  /** Plynulo presunie kresbu zápalky; skončí aj vtedy, keď sa zmení token animácie. */
+  function tween(matchId, from, to, ms, token) {
     const g = matchEls.get(matchId);
     return new Promise((resolve) => {
       const t0 = performance.now();
       const frame = (now) => {
+        if (token !== generation) {
+          resolve();
+          return;
+        }
         const k = easeInOut(Math.min(1, (now - t0) / ms));
         g.setAttribute('transform', transformOf(
           from.x + (to.x - from.x) * k,
@@ -417,16 +463,27 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
     });
   }
 
-  /** Jeden krok plánu: animácia a potom zápis do stavu. */
-  async function playStep(step, trayIndex, ms) {
+  /** Dá sa krok vykonať? Zastaraný krok (prázdny zdroj, neznámy/obsadený cieľ) vypíše varovanie. */
+  function stepMatch(step) {
     const m = state.matches.find((x) => x.slot === step.from);
+    const toTray = step.to === 'tray';
+    const free = toTray || (board.slotById.has(step.to) && !occupied(state).has(step.to));
+    if (m && free) return m;
+    console.warn(`animatePlan: preskakujem krok ${step.from} -> ${step.to}`);
+    return null;
+  }
+
+  /** Jeden krok plánu: animácia a potom zápis do stavu (iba ak animáciu nikto nezastavil). */
+  async function playStep(step, trayIndex, ms, token) {
+    const m = stepMatch(step);
     if (!m) return false;
     const toTray = step.to === 'tray';
     const target = toTray
       ? { ...trayPosition(board, trayIndex), angle: 90 }
       : board.slotById.get(step.to);
     bringToFront(m.id);
-    if (ms > 0 && !prefersReducedMotion()) await tween(m.id, m, target, ms);
+    if (ms > 0 && !prefersReducedMotion()) await tween(m.id, m, target, ms, token);
+    if (token !== generation) return false;
     commit(toTray ? moveToTray(state, m.id, target) : moveToSlot(state, m.id, step.to, board));
     return toTray;
   }
@@ -440,6 +497,7 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
      * @param {{matches:object[]}} nextState
      */
     load(puzzle, nextState) {
+      cancelAnimation();
       board = puzzle.board;
       state = nextState;
       selected = null;
@@ -449,6 +507,7 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
     },
     /** Nastaví nový stav (napr. po resete) a prekreslí; nevolá onChange. */
     setState(nextState) {
+      cancelAnimation();
       drag = null;
       const ids = state.matches.map((m) => m.id).join();
       state = nextState;
@@ -472,20 +531,25 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
     },
     /**
      * Prehrá plán riešenia: kroky {from: slot, to: slot|'tray'} postupne.
+     * Predchádzajúcu animáciu zastaví; load/setState/setInteractive zastavia túto.
      * @param {{from:string, to:string}[]} plan
      * @param {number} [ms] trvanie jedného kroku
      * @returns {Promise<void>}
      */
     async animatePlan(plan, ms = 600) {
+      cancelAnimation();
       revert();
+      render(); // zahodí rozpracovanú polohu prípadnej zastavenej animácie
+      const token = generation;
       animating = true;
       let trayIndex = trayMatches(state).length;
       try {
         for (const step of plan) {
-          if (await playStep(step, trayIndex, ms)) trayIndex += 1;
+          if (await playStep(step, trayIndex, ms, token)) trayIndex += 1;
+          if (token !== generation) return;
         }
       } finally {
-        animating = false;
+        if (token === generation) animating = false;
       }
     },
     /** Poloha práve ťahanej zápalky alebo null. */
@@ -493,8 +557,9 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
       if (!drag || !drag.moved) return null;
       return { matchId: drag.matchId, x: drag.x, y: drag.y, angle: drag.angle };
     },
-    /** Zapne/vypne ovládanie hráčom (vypnutie zruší rozpracovaný ťah). */
+    /** Zapne/vypne ovládanie hráčom; zastaví animáciu, vypnutie zruší aj rozpracovaný ťah. */
     setInteractive(on) {
+      cancelAnimation();
       interactive = Boolean(on);
       if (!interactive) revert();
     },

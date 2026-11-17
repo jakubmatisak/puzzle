@@ -24,6 +24,9 @@ let firstRoute = true;
 let puzzle = null; // práve otvorená úloha
 let board = null;
 
+const TIP_KEY = 'zapalkovo.rotateTipDismissed';
+const WIDE_RATIO = 2.5; // od tohto pomeru šírka/výška je úloha „široká“
+
 /** Rozloží zápis „attr:kľúč;attr2:kľúč2“ na dvojice [atribút, kľúč]. */
 function parseAttrSpec(spec) {
   return spec.split(';')
@@ -230,6 +233,18 @@ function showMessage(key) {
   document.getElementById('message').textContent = key ? i18n.t(key) : '';
 }
 
+/** Tip „otoč telefón“ pre široké úlohy; CSS ho ukáže iba na úzkom displeji na výšku. */
+function renderRotateTip() {
+  const { w, h } = puzzle.board.bounds;
+  document.getElementById('rotate-tip').hidden = storage.get(TIP_KEY, false) || w / h <= WIDE_RATIO;
+}
+
+/** Zavrie tip a zapamätá si to. */
+function dismissRotateTip() {
+  storage.set(TIP_KEY, true);
+  document.getElementById('rotate-tip').hidden = true;
+}
+
 /** Otvorí úlohu podľa ID z trasy; neznáme ID vedie na domov. */
 function openPuzzle(route) {
   if (!data || !route.puzzleId || puzzle?.id === route.puzzleId) return;
@@ -242,6 +257,7 @@ function openPuzzle(route) {
   board.load(puzzle, createState(puzzle));
   renderTask();
   renderMoves();
+  renderRotateTip();
   showMessage('');
 }
 
@@ -298,7 +314,10 @@ async function init() {
     onHint: showMessage,
     t: i18n.t,
   });
+  // Testovací háčik pre E2E testy (napr. animatePlan); na verejnom serveri neexistuje.
+  if (window.location.hostname === 'localhost') window.__zapalkovoBoard = board;
   document.querySelector('[data-action="rotate"]').addEventListener('click', () => board.rotateSelected());
+  document.querySelector('.rotate-tip-close').addEventListener('click', dismissRotateTip);
   startRouter(showView);
   try {
     data = await loadPuzzles();

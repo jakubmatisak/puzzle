@@ -66,3 +66,20 @@ export function findSnapSlot(pos, slots, occupied, opts = {}) {
   }
   return best;
 }
+
+/**
+ * Vzdialenosť bodu od úsečky zápalky (stred x, y, uhol, polovica dĺžky half).
+ * Používa sa na „chytenie“ najbližšej zápalky prstom.
+ * @param {{x:number, y:number}} p bod
+ * @param {{x:number, y:number, angle:number}} m stred a uhol zápalky
+ * @param {number} [half] polovica dĺžky (50)
+ * @returns {number}
+ */
+export function segmentDistance(p, m, half = 50) {
+  const rad = (m.angle * Math.PI) / 180;
+  const ux = Math.cos(rad);
+  const uy = Math.sin(rad);
+  const along = (p.x - m.x) * ux + (p.y - m.y) * uy; // priemet na os zápalky
+  const t = Math.max(-half, Math.min(half, along));
+  return distance(p, { x: m.x + t * ux, y: m.y + t * uy });
+}

@@ -72,11 +72,6 @@
   filter: drop-shadow(0 3px 2px rgb(0 0 0 / 45%));
 }
 
-/* Neviditeľná, väčšia plocha na chytenie zápalky prstom */
-.board .match-hit {
-  fill: transparent;
-}
-
 .board .match-stick {
   fill: url("#stick");
   stroke: rgb(90 50 20 / 35%);
@@ -101,6 +96,49 @@
 .board .is-dragging {
   cursor: grabbing;
   filter: drop-shadow(5px 12px 5px rgb(0 0 0 / 55%)) drop-shadow(0 0 3px var(--flame-1));
+}
+
+/* Tip „otoč telefón na šírku“: iba úzky displej na výšku (a len pre široké úlohy) */
+.rotate-tip {
+  display: none;
+}
+
+.rotate-tip-close {
+  flex: none;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rotate-tip-close:focus-visible {
+  outline: 2px solid var(--flame-1);
+}
+
+/* Na telefóne doska využije takmer celú šírku */
+@media (width <= 600px) {
+  .board-wrap {
+    padding: 2px;
+    border-radius: var(--radius);
+  }
+}
+
+@media (width < 600px) and (orientation: portrait) {
+  .rotate-tip:not([hidden]) {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0 0 0 var(--space-3);
+    color: rgb(255 240 210 / 80%);
+    font-size: var(--step-minus-1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

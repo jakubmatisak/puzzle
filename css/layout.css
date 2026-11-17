@@ -589,6 +589,13 @@
   }
 }
 
+/* Nízka obrazovka (telefón na šírku): lišta by zakryla dosku, preto nie je prilepená */
+@media (height < 500px) {
+  .controls {
+    position: static;
+  }
+}
+
 /* Od 900 px: doska vľavo, panel ovládania vpravo */
 @media (width >= 900px) {
   .play {
