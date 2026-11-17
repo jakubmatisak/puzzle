@@ -39,6 +39,10 @@ describe('make-zip collectFiles', () => {
       expect(files).not.toContain(f);
     }
   });
+
+  it('neobsahuje moduly len pre testy (solver)', () => {
+    expect(files).not.toContain('js/core/solver.js');
+  });
 });
 
 describe('make-zip zipName', () => {

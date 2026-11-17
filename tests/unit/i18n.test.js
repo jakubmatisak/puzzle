@@ -77,7 +77,7 @@ describe('i18n', () => {
   });
 
   it('has all required keys in both languages', () => {
-    const required = ['app.title', 'nav.home', 'nav.help', 'home.choose', 'home.solved',
+    const required = ['nav.home', 'nav.help', 'home.choose', 'home.solved',
       'game.moves', 'game.hint', 'game.solution', 'game.nextSolution', 'game.reset',
       'game.rotate', 'game.record', 'game.stopRecord', 'game.download', 'game.next',
       'game.solved', 'game.revealed', 'game.needRotate', 'sensors.enable',

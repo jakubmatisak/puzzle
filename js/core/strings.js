@@ -1,7 +1,6 @@
 /** Všetky texty rozhrania v slovenčine (sk) a angličtine (en); obe sady majú rovnaké kľúče. */
 export const STRINGS = {
   sk: {
-    'app.title': 'Zápalkovo',
     'nav.home': 'Domov',
     'nav.help': 'Návod',
     'home.choose': 'Vyber si kategóriu',
@@ -56,7 +55,6 @@ export const STRINGS = {
     'footer.text': 'Zápalkovo · záverečné zadanie WEBTE1',
   },
   en: {
-    'app.title': 'Zápalkovo',
     'nav.home': 'Home',
     'nav.help': 'How to play',
     'home.choose': 'Choose a category',

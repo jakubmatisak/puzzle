@@ -63,7 +63,7 @@ js/core/                 čistá logika bez DOM (pokrytá unit testami)
   puzzle-state.js        stav úlohy (presun, otočenie, odloženie, plán riešenia)
   puzzles.js             načítanie a kontrola puzzles.json
   validator.js           je úloha vyriešená?
-  solver.js              hľadanie všetkých riešení rovníc (pre dátové testy)
+  solver.js              hľadanie všetkých riešení rovníc (iba pre dátové testy, nie je v ZIP-e ani v cache)
   queue.js               náhodné poradie úloh bez opakovania, uložený postup
   storage.js             bezpečný obal nad localStorage
   i18n.js, strings.js    preklady SK/EN

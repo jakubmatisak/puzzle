@@ -14,6 +14,9 @@ const ROOT_FILES = ['index.html', 'README.md', 'PROMPTS.md', 'manifest.webmanife
 /** Priečinky, ktoré sa pridajú celé (rekurzívne). */
 const DIRS = ['css', 'js', 'data', 'icons', 'docs/img'];
 
+/** Súbory z týchto priečinkov, ktoré hra nepoužíva (solver slúži iba testom). */
+const EXCLUDE = ['js/core/solver.js'];
+
 /** Všetky súbory v priečinku (rekurzívne) ako relatívne cesty s lomkou „/“. */
 function walk(root, dir) {
   const out = [];
@@ -44,7 +47,7 @@ export function collectFiles(root) {
   for (const dir of DIRS) {
     if (exists(join(root, dir))) files.push(...walk(root, dir));
   }
-  return files.sort();
+  return files.filter((f) => !EXCLUDE.includes(f)).sort();
 }
 
 /** Názov archívu z premennej prostredia ZZ_NAME (predvolene ZZ_priezvisko). */

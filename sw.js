@@ -33,7 +33,6 @@ const APP_SHELL = [
   './js/core/queue.js',
   './js/core/roman.js',
   './js/core/sensors-logic.js',
-  './js/core/solver.js',
   './js/core/storage.js',
   './js/core/strings.js',
   './js/core/validator.js',

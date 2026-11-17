@@ -3,7 +3,9 @@
  * nápoveda, animované riešenie (aj viac riešení), reset, rozpoznanie úspechu
  * a ďalšia úloha. Hraciu plochu (board.js) dostane hotovú zvonka.
  */
-import { createState, movesUsed, solutionPlan } from '../core/puzzle-state.js';
+import {
+  createState, movesUsed, resetState, solutionPlan,
+} from '../core/puzzle-state.js';
 import { isSolved } from '../core/validator.js';
 
 const TIP_KEY = 'zapalkovo.rotateTipDismissed';
@@ -262,7 +264,7 @@ export function createGame({ root, board, queue, i18n, puzzles, storage = null }
     revealed = false;
     solved = false;
     animating = false;
-    board.setState(createState(puzzle));
+    board.setState(resetState(puzzle));
     board.setInteractive(true);
     hideSuccess();
     setMessage(null);

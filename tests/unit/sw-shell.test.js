@@ -3,6 +3,8 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.cwd();
+/** Moduly len pre testy (do cache ani do ZIP-u nepatria). */
+const TEST_ONLY = ['js/core/solver.js'];
 const swText = readFileSync(join(root, 'sw.js'), 'utf8');
 
 /** Vyparsuje pole APP_SHELL zo zdrojového textu sw.js. */
@@ -36,9 +38,13 @@ describe('service worker APP_SHELL', () => {
     });
   });
 
-  it('lists every js and css file', () => {
+  it('lists every js and css file except test-only modules', () => {
     const all = [...listFiles('js', '.js'), ...listFiles('css', '.css')];
-    all.forEach((f) => expect(shell, f).toContain(`./${f}`));
+    all.filter((f) => !TEST_ONLY.includes(f)).forEach((f) => expect(shell, f).toContain(`./${f}`));
+  });
+
+  it('does not list test-only modules', () => {
+    TEST_ONLY.forEach((f) => expect(shell, f).not.toContain(`./${f}`));
   });
 
   it('lists the core files and puzzles', () => {
