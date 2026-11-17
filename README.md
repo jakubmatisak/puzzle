@@ -6,6 +6,8 @@ Záverečné zadanie z predmetu WEBTE1 (ZS 2026/27).
 
 Autori: Meno Priezvisko, Meno Priezvisko
 
+**Online:** https://jakubmatisak.github.io/puzzle/
+
 ![Domovská obrazovka Zápalkova](docs/img/home.jpg)
 
 ![Hra – rovnica 9 + 4 = 5](docs/img/play.jpg)
@@ -172,6 +174,10 @@ E2E testy si samy spustia lokálny server na porte 5173. Pokrývajú ťahanie my
 2. Obsah ZIP-u (`index.html`, `manifest.webmanifest`, `sw.js`, `favicon.svg`, `icons/`, `css/`, `js/`, `data/`, …) nahraj do ľubovoľného priečinka na **HTTPS** serveri.
 3. Všetky cesty sú relatívne (`./…`) a service worker má scope `./`, takže hra funguje aj v podpriečinku (napr. `https://server/~login/zapalkovo/`).
 4. HTTPS je potrebné pre service worker (offline, inštalácia) aj pre senzory na mobile.
+
+## Automatické nasadenie (GitHub Pages)
+
+Každý push do vetvy `main` spustí workflow `.github/workflows/deploy.yml`: najprv unit testy a lint, potom `node scripts/build-site.mjs _site` (rovnaké súbory ako v ZIP-e + `.nojekyll`) a výsledok publikuje do vetvy `gh-pages`. GitHub Pages servuje vetvu `gh-pages` na adrese https://jakubmatisak.github.io/puzzle/.
 
 ## Podporované prehliadače
 
