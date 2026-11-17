@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6b26b"/>
+      <stop offset="1" stop-color="#d0602a"/>
+    </linearGradient>
+    <radialGradient id="head" cx="0.35" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#e2553a"/>
+      <stop offset="1" stop-color="#6e130f"/>
+    </radialGradient>
+  </defs>
+  <!-- Plný štvorec bez zaoblenia: systém ho sám orezá; zápalka je v strede v bezpečnej zóne (80 %). -->
+  <rect width="64" height="64" fill="url(#bg)"/>
+  <g transform="translate(32 32) scale(0.78) translate(-30.5 -35)">
+    <g transform="translate(30 35) rotate(-40)">
+      <rect x="-27" y="-4.5" width="46" height="9" rx="3.5" fill="#fff4dc" stroke="#7a4a1c" stroke-width="1.5"/>
+      <ellipse cx="20" cy="0" rx="9.5" ry="7.5" fill="url(#head)" stroke="#5a0f0b" stroke-width="1"/>
+    </g>
+  </g>
+</svg>

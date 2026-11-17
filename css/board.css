@@ -1,0 +1,329 @@
+/* Hracia plocha: tmavý „stôl“, na ktorom vyniknú zápalky. */
+
+/* Oblasť dosky vyplní svoju bunku mriežky. Je to kontajner (jednotky cqw/cqh), aby sa rámik
+   dosky mohol prispôsobiť pomeru strán úlohy: zmestí sa do šírky aj výšky oblasti
+   a nikde nevznikne veľká prázdna tmavá plocha. Zvyšné miesto ostane okolo rámika. */
+.board-area {
+  --board-frame: 2px; /* hrúbka rámika; vnútorný okraj dávajú už súradnice úlohy (padding 60) */
+  --board-reserve: 0px; /* miesto pod rámikom (tip „otoč telefón“) */
+
+  position: relative;
+  display: flex;
+  grid-area: board;
+  flex-direction: column;
+  gap: var(--space-1);
+  align-items: center;
+  min-width: 0;
+  min-height: 0;
+  container-type: size;
+}
+
+.board-wrap {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  border: var(--board-frame) solid var(--frame);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgb(255 230 190 / 10%), transparent 65%),
+    repeating-linear-gradient(92deg, rgb(255 255 255 / 1.5%) 0 2px, transparent 2px 11px),
+    linear-gradient(170deg, var(--board), var(--board-2));
+  box-shadow: inset 0 2px 14px rgb(0 0 0 / 45%), var(--shadow-md);
+}
+
+/* Šírka SVG = menšia z: celá šírka oblasti, alebo výška oblasti ÷ pomer (výška/šírka) úlohy.
+   --board-ratio nastavuje board.js podľa viewBoxu. Iba samotné SVG blokuje posúvanie
+   stránky prstom; zvyšok stránky sa posúva normálne. */
+.board {
+  --board-edge: calc(2 * var(--board-frame));
+  --board-w: min(
+    100cqw - var(--board-edge),
+    (100cqh - var(--board-edge) - var(--board-reserve)) / var(--board-ratio, 0.6)
+  );
+
+  display: block;
+  width: var(--board-w);
+  height: calc(var(--board-w) * var(--board-ratio, 0.6));
+  touch-action: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent; /* jediné vendor rozšírenie: bez neho Chrome na mobile bliká pri ťuknutí */
+}
+
+/* Prvky, ktoré do dosky kreslí hra */
+.board .slot {
+  stroke: var(--board-line);
+  stroke-width: 3;
+  stroke-dasharray: 6 8;
+  stroke-linecap: round;
+  transition: stroke 0.12s, stroke-width 0.12s;
+}
+
+.board .slot-target {
+  stroke: var(--flame-2);
+  stroke-dasharray: none;
+  stroke-width: 6;
+  filter: drop-shadow(0 0 6px var(--flame-1));
+}
+
+.board .tray {
+  fill: rgb(255 240 210 / 4%);
+  stroke: var(--board-line);
+  stroke-width: 2;
+  stroke-dasharray: 10 8;
+}
+
+.board .tray-label {
+  fill: rgb(255 240 210 / 45%);
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* Farby gradientov zápalky (svetlá hrana paličky a odlesk hlavičky) */
+.stop-stick-hi {
+  stop-color: #fbe3b4;
+}
+
+.stop-head-hi {
+  stop-color: #f2876d;
+}
+
+.board .match {
+  cursor: grab;
+  outline: none;
+  filter: drop-shadow(0 3px 2px rgb(0 0 0 / 45%));
+}
+
+.board .match-stick {
+  fill: url("#stick");
+  stroke: rgb(90 50 20 / 35%);
+  stroke-width: 0.8;
+}
+
+.board .match-head {
+  fill: url("#head");
+  stroke: rgb(60 10 5 / 50%);
+  stroke-width: 0.8;
+}
+
+.board .match-selected {
+  filter: drop-shadow(0 0 3px var(--flame-1)) drop-shadow(0 3px 2px rgb(0 0 0 / 45%));
+}
+
+.board .match:focus-visible {
+  filter: drop-shadow(0 0 2px var(--flame-2)) drop-shadow(0 0 5px var(--flame-1));
+}
+
+/* Zdvihnutá zápalka: väčší a rozmazanejší tieň */
+.board .is-dragging {
+  cursor: grabbing;
+  filter: drop-shadow(5px 12px 5px rgb(0 0 0 / 55%)) drop-shadow(0 0 3px var(--flame-1));
+}
+
+/* Tip „otoč telefón na šírku“: iba úzky displej na výšku (a len pre široké úlohy).
+   Leží pod rámikom dosky ako jeden riadok, nič na doske nezakrýva. */
+.rotate-tip {
+  display: none;
+}
+
+.rotate-tip-close {
+  flex: none;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rotate-tip-close:focus-visible {
+  outline: 2px solid var(--focus);
+}
+
+/* Na telefóne menšie zaoblenie rámika */
+@media (width <= 600px) {
+  .board-wrap {
+    border-radius: var(--radius);
+  }
+}
+
+/* Na výšku: rámik dosky (a tip) v strede oblasti, voľné miesto rovnako hore aj dole */
+@media (orientation: portrait) {
+  .board-area {
+    justify-content: center;
+  }
+}
+
+@media (width < 600px) and (orientation: portrait) {
+  .board-area:has(> .rotate-tip:not([hidden])) {
+    --board-reserve: calc(var(--tap) + var(--space-1));
+  }
+
+  .rotate-tip:not([hidden]) {
+    display: flex;
+    flex: none;
+    gap: var(--space-2);
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin: 0;
+    padding: 0 0 0 var(--space-3);
+    color: var(--ink-soft);
+    font-size: var(--step-minus-1);
+    line-height: 1.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board .slot {
+    transition: none;
+  }
+}
+
+/* ---------- Úloha vyriešená: karta a padajúce iskry (hlavičky zápaliek) ---------- */
+.success {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: var(--space-3);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.success-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  justify-content: center;
+  max-width: 30rem;
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--frame);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px var(--surface), 0 0 0 5.5px var(--accent), var(--shadow-lg);
+  color: var(--ink);
+  pointer-events: auto;
+  animation: success-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.success-icon {
+  width: 2rem;
+  height: 2rem;
+  padding: 0.3rem;
+  border-radius: 50%;
+  background: var(--ok);
+  color: var(--surface);
+  stroke-width: 3;
+}
+
+.success-text {
+  display: grid;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.success-title {
+  font-family: var(--font-serif);
+  font-size: var(--step-1);
+}
+
+/* Iskry padajú iba v rámiku dosky; karta môže na nízkej doske presahovať nahor */
+.sparks {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+/* Iskra = stĺpec výšky dosky s hlavičkou na spodku; posun o -100 % → 0 ju „zhodí“ zhora nadol. */
+.spark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--i) * 10% + 4%);
+  width: 12px;
+  transform: translateY(-100%);
+  animation: spark-fall 1.5s cubic-bezier(0.5, 0, 0.9, 0.6) calc(var(--i) * 0.11s) both;
+}
+
+.spark::after {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 12px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f2876d, var(--head-1) 45%, var(--head-2));
+  box-shadow: 0 0 6px 2px var(--flame-1), 0 0 14px 4px rgb(253 230 138 / 45%);
+  content: "";
+  animation: spark-flicker 0.18s ease-in-out infinite alternate;
+}
+
+.spark:nth-child(1) { --i: 0; }
+.spark:nth-child(2) { --i: 5; }
+.spark:nth-child(3) { --i: 2; }
+.spark:nth-child(4) { --i: 7; }
+.spark:nth-child(5) { --i: 1; }
+.spark:nth-child(6) { --i: 8; }
+.spark:nth-child(7) { --i: 4; }
+.spark:nth-child(8) { --i: 6; }
+.spark:nth-child(9) { --i: 3; }
+
+@keyframes success-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes spark-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  75% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(0) rotate(25deg);
+  }
+}
+
+@keyframes spark-flicker {
+  to {
+    transform: scale(1.25);
+    filter: brightness(1.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sparks {
+    display: none;
+  }
+
+  .success-card {
+    animation: none;
+  }
+}
