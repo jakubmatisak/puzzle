@@ -227,3 +227,83 @@ test.describe('queue and progress', () => {
     await expect(page.locator('#moves')).toContainText('0 /');
   });
 });
+
+test.describe('review fixes', () => {
+  test.beforeEach(({ page: _page }, info) => {
+    test.skip(info.project.name === 'mobile-chrome', 'mouse flow runs on desktop projects');
+  });
+
+  const currentId = (page) => page.evaluate(() => window.__zapalkovoGame.getCurrent()?.id);
+
+  test('Next after a deep link never repeats the deep-linked puzzle', async ({ page }) => {
+    for (let run = 0; run < 10; run += 1) {
+      await page.goto('./#/');
+      await page.evaluate(() => localStorage.clear());
+      await openPuzzle(page, 'num-01');
+      await page.locator('#controls [data-action="next"]').click();
+      await expect.poll(() => currentId(page)).toBeTruthy();
+      expect(await currentId(page), `run ${run}`).not.toBe('num-01');
+    }
+  });
+
+  test('Next after a deep link skips it even when the queue would pick it (rng = 0)', async ({ page }) => {
+    // rng 0 → fronta vyberie prvú neodohranú úlohu = num-01, práve otvorenú cez deep link
+    await page.addInitScript(() => { Math.random = () => 0; });
+    await openPuzzle(page, 'num-01');
+    await page.locator('#controls [data-action="next"]').click();
+    await expect.poll(() => currentId(page)).not.toBe('num-01');
+  });
+
+  test('success is announced in the live region and Next moves focus to the title', async ({ page }) => {
+    const puzzle = await openPuzzle(page, 'num-01');
+    await solveByMouse(page, puzzle);
+    await expect(page.locator('#message')).toContainText('Výborne');
+    await page.locator('#success [data-action="next"]').click();
+    await expect(page.locator('#success')).toBeHidden();
+    await expect(page.locator('#play-title')).toBeFocused();
+  });
+
+  test('reveal, reset, then solving by mouse counts', async ({ page }) => {
+    const puzzle = await openPuzzle(page, 'num-01');
+    await page.locator('#controls [data-action="solution"]').click();
+    await expect.poll(() => occupiedSlots(page)).toEqual([...puzzle.solutions[0]].sort());
+    await page.locator('#controls [data-action="reset"]').click();
+    await solveByMouse(page, puzzle);
+    await expect(page.locator('#success')).toBeVisible();
+    await page.locator('.back-link').click();
+    await expect(page.locator('#categories .category-card').first()).toContainText('Vyriešené 1 / 6');
+  });
+
+  test('after a reveal, moving a match away and back does not count', async ({ page }) => {
+    const puzzle = await openPuzzle(page, 'num-01');
+    await page.locator('#controls [data-action="solution"]').click();
+    await expect.poll(() => occupiedSlots(page)).toEqual([...puzzle.solutions[0]].sort());
+    const [{ to }] = solutionPlan(puzzle, 0);
+    await playStep(page, puzzle, { from: to, to: 'tray' });
+    const trayMatch = await page.evaluate(() =>
+      window.__zapalkovoBoard.getState().matches.find((m) => m.slot === null));
+    const target = puzzle.board.slotById.get(to);
+    const grab = grabPoint(trayMatch);
+    const drop = { x: target.x + (grab.x - trayMatch.x), y: target.y + (grab.y - trayMatch.y) };
+    // zápalka v odkladacej ploche leží zvislo, cieľový slot tiež (c4.b)
+    await mouseDrag(page, await svgToScreen(page, grab), await svgToScreen(page, drop));
+    await expect.poll(() => occupiedSlots(page)).toEqual([...puzzle.solutions[0]].sort());
+    await expect(page.locator('#success')).toBeHidden();
+  });
+
+  test('a solved puzzle is not resumed; a revealed one is (R12)', async ({ page }) => {
+    await page.goto('./#/play/numbers');
+    await page.waitForFunction(() => Boolean(window.__zapalkovoGame?.getCurrent()));
+    const revealedId = await currentId(page);
+    await page.locator('#controls [data-action="solution"]').click();
+    await page.reload();
+    await page.waitForFunction(() => Boolean(window.__zapalkovoGame?.getCurrent()));
+    expect(await currentId(page)).toBe(revealedId);
+    await page.locator('#controls [data-action="reset"]').click();
+    await solveByMouse(page, byId(revealedId));
+    await expect(page.locator('#success')).toBeVisible();
+    await page.reload();
+    await page.waitForFunction(() => Boolean(window.__zapalkovoGame?.getCurrent()));
+    expect(await currentId(page)).not.toBe(revealedId);
+  });
+});

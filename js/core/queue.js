@@ -44,6 +44,11 @@ export function createQueue(storage, rng = Math.random) {
     return id;
   }
 
+  /** Zabudne aktuálnu úlohu kategórie (po vyriešení); ďalšie otvorenie vyberie novú. */
+  function clearCurrent(categoryId) {
+    storage.set(currentKey(categoryId), null);
+  }
+
   /** Zapíše úlohu medzi vyriešené (každé ID najviac raz). */
   function markSolved(id) {
     const solved = storage.get(SOLVED_KEY, []);
@@ -58,5 +63,5 @@ export function createQueue(storage, rng = Math.random) {
     return allIds.filter((id) => list.includes(id)).length;
   }
 
-  return { current, next, markSolved, solvedCount };
+  return { current, next, clearCurrent, markSolved, solvedCount };
 }

@@ -561,6 +561,19 @@
   min-height: 0;
 }
 
+/* Počas karty úspechu hláška ostáva iba pre čítačky obrazovky (inak by sa text zobrazil dvakrát). */
+.play:has(.success:not([hidden])) .message {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 .controls {
   position: sticky;
   bottom: 0;

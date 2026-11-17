@@ -10,6 +10,22 @@ const TIP_KEY = 'zapalkovo.rotateTipDismissed';
 const WIDE_RATIO = 2.5; // od tohto pomeru šírka/výška je úloha „široká“
 
 /**
+ * Ďalšia úloha z fronty, ale nie tá, ktorá je práve zobrazená (napr. otvorená cez
+ * deep link, o ktorej fronta nevie). Prvé volanie ju už zapísalo medzi odohrané,
+ * takže druhé vyberie inú.
+ * @param {{next:Function}} queue fronta úloh
+ * @param {string} categoryId
+ * @param {string[]} ids ID úloh kategórie
+ * @param {string|null} currentId práve zobrazená úloha
+ * @returns {string|null}
+ */
+export function nextDistinct(queue, categoryId, ids, currentId) {
+  const id = queue.next(categoryId, ids);
+  if (id === currentId && ids.length > 1) return queue.next(categoryId, ids);
+  return id;
+}
+
+/**
  * Vytvorí ovládač hry nad obrazovkou #view-play.
  * Po vyriešení vyšle na `root` udalosť `solved` (detail: {puzzle}).
  * @param {{root:HTMLElement, board:object, queue:object, i18n:object,
@@ -125,17 +141,21 @@ export function createGame({ root, board, queue, i18n, puzzles, storage = null }
 
   // ---------- úspech ----------
 
-  /** Skryje panel úspechu. */
+  /** Skryje panel úspechu; ak bol fokus v ňom, presunie ho na nadpis hry. */
   function hideSuccess() {
+    if (ui.success.hidden) return;
+    const hadFocus = ui.success.contains(document.activeElement);
     ui.success.hidden = true;
+    if (hadFocus) ui.title.focus({ preventScroll: true });
   }
 
   /** Úloha vyriešená: zápis do fronty, zamknutie dosky, oslava a fokus na „Ďalšia úloha“. */
   function succeed() {
     solved = true;
     queue.markSolved(puzzle.id);
+    queue.clearCurrent(puzzle.category); // R12: vyriešená úloha sa už neobnoví
     board.setInteractive(false);
-    setMessage(null);
+    setMessage({ key: 'game.solved' }); // oznámi úspech aj čítačke obrazovky
     renderButtons();
     ui.success.hidden = false;
     ui.successNext.focus();
@@ -191,7 +211,7 @@ export function createGame({ root, board, queue, i18n, puzzles, storage = null }
   /** Ďalšia úloha tej istej kategórie z fronty. */
   function next() {
     if (!puzzle) return;
-    const id = queue.next(puzzle.category, idsOf(puzzle.category));
+    const id = nextDistinct(queue, puzzle.category, idsOf(puzzle.category), puzzle.id);
     load(byId(id));
   }
 

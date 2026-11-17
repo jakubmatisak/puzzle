@@ -130,3 +130,21 @@ describe('createQueue', () => {
     expect(q.solvedCount('cat', IDS)).toBe(1);
   });
 });
+
+describe('clearCurrent (R12)', () => {
+  it('po vyriešení zmaže aktuálnu úlohu kategórie, odohrané ostávajú', () => {
+    const q = createQueue(createStorage(fakeBackend()), () => 0);
+    const first = q.next('cat', IDS);
+    expect(q.current('cat', IDS)).toBe(first);
+    q.clearCurrent('cat');
+    expect(q.current('cat', IDS)).toBeNull();
+    expect(q.next('cat', IDS)).not.toBe(first);
+  });
+  it('iné kategórie sa nemenia', () => {
+    const q = createQueue(createStorage(fakeBackend()), () => 0);
+    const other = q.next('other', IDS);
+    q.next('cat', IDS);
+    q.clearCurrent('cat');
+    expect(q.current('other', IDS)).toBe(other);
+  });
+});
