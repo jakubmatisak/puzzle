@@ -114,6 +114,49 @@ test.describe('video recording', () => {
     await expect(page.locator('#recording')).toBeVisible();
   });
 
+  test('a failed start shows a failure note and leaves no timer running', async ({ page }) => {
+    await page.addInitScript(() => {
+      const active = new Set();
+      const setI = window.setInterval.bind(window);
+      const clearI = window.clearInterval.bind(window);
+      window.setInterval = (fn, ms, ...args) => {
+        const id = setI(fn, ms, ...args);
+        active.add(id);
+        return id;
+      };
+      window.clearInterval = (id) => {
+        active.delete(id);
+        clearI(id);
+      };
+      window.__activeIntervals = active;
+      const Original = window.MediaRecorder;
+      window.MediaRecorder = class extends Original {
+        constructor() {
+          throw new Error('start failed');
+        }
+      };
+    });
+    await openPuzzle(page);
+    const before = await page.evaluate(() => window.__activeIntervals.size);
+    const record = page.locator('#controls [data-action="record"]');
+    await record.click();
+    await expect(page.locator('#record-note')).toBeVisible();
+    await expect(page.locator('#record-note')).toHaveText('Nahrávanie sa nepodarilo spustiť.');
+    await expect(page.locator('#rec-indicator')).toBeHidden();
+    await expect(record).toContainText('Nahrávať');
+    expect(await page.evaluate(() => window.__activeIntervals.size)).toBe(before);
+  });
+
+  test('an automatic stop (next puzzle) does not steal focus to the download link', async ({ page }) => {
+    await openPuzzle(page);
+    await page.locator('#controls [data-action="record"]').click();
+    await page.waitForTimeout(500);
+    await page.locator('#controls [data-action="next"]').click();
+    await expect(page.locator('#recording')).toBeVisible();
+    await expect(page.locator('#rec-indicator')).toBeHidden();
+    await expect(page.locator('#rec-download')).not.toBeFocused();
+  });
+
   test('without MediaRecorder the button is disabled with a note', async ({ page }) => {
     await page.addInitScript(() => {
       delete window.MediaRecorder;

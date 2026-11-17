@@ -32,6 +32,7 @@ export function createRecordingUi({ root, game, i18n }) {
   let puzzleId = null; // úloha, ktorá sa nahráva
   let url = null; // adresa blobu práve zobrazeného videa
   let timer = 0;
+  let stoppedByUser = false; // fokus na odkaz presunieme len po kliknutí na Zastaviť
 
   const recorder = createRecorder({
     getScene: game.getScene,
@@ -39,9 +40,16 @@ export function createRecordingUi({ root, game, i18n }) {
     onError: () => {
       clearInterval(timer);
       renderButton();
-      note.hidden = false; // štart zlyhal: ukáž hlášku, predošlé video ostáva
+      showNote('record.failed'); // štart zlyhal (napr. chyba MediaRecorder)
     },
   });
+
+  /** Zobrazí hlášku pod tlačidlami (data-i18n, aby ju prekladal aj prepínač jazyka). */
+  function showNote(key) {
+    note.dataset.i18n = key;
+    note.textContent = i18n.t(key);
+    note.hidden = false;
+  }
 
   /** Tlačidlo: text podľa stavu (data-i18n, aby ho prekladal aj prepínač jazyka). */
   function renderButton() {
@@ -70,7 +78,7 @@ export function createRecordingUi({ root, game, i18n }) {
   function showResult(blob) {
     clearInterval(timer);
     renderButton();
-    if (blob.size === 0) return; // nahrávanie zlyhalo: ostane predošlý výsledok
+    if (blob.size === 0) return; // nahrávanie zlyhalo: nie je čo ukázať
     clearResult();
     url = URL.createObjectURL(blob);
     const video = document.createElement('video');
@@ -82,32 +90,45 @@ export function createRecordingUi({ root, game, i18n }) {
     download.href = url;
     download.download = `zapalkovo-${puzzleId}.webm`;
     panel.hidden = false;
-    download.focus();
+    if (stoppedByUser) download.focus();
   }
 
   /** Spustí nahrávanie aktuálnej úlohy. */
   function start() {
     if (!game.getCurrent()) return;
     clearResult();
+    note.hidden = true;
     puzzleId = game.getCurrent().id;
+    stoppedByUser = false;
     recorder.start();
+    if (recorder.state !== 'recording') return; // štart zlyhal (onError už ukázal hlášku)
     renderButton();
     renderTime();
     timer = setInterval(renderTime, 500);
   }
 
-  /** Zastaví nahrávanie, ak beží. */
+  /** Zastaví nahrávanie, ak beží (automaticky: iná úloha, odchod z hry). */
   function stop() {
     if (recorder.state === 'recording') recorder.stop();
   }
 
+  /** Klik na tlačidlo: Zastaviť (fokus potom prejde na odkaz na video) alebo Nahrávať. */
+  function toggle() {
+    if (recorder.state !== 'recording') {
+      start();
+      return;
+    }
+    stoppedByUser = true;
+    stop();
+  }
+
   if (recorder.isSupported()) {
-    button.addEventListener('click', () => (recorder.state === 'recording' ? stop() : start()));
+    button.addEventListener('click', toggle);
   } else {
     button.disabled = true;
     button.dataset.i18nAttr = 'title:record.unsupported';
     button.title = i18n.t('record.unsupported');
-    note.hidden = false;
+    showNote('record.unsupported');
   }
   closeButton.addEventListener('click', () => {
     clearResult();
