@@ -122,3 +122,54 @@ test.describe('play view fits one viewport', () => {
     });
   }
 });
+
+// Úvodná stránka sa tiež zmestí do jedného okna: hlavička, úvod a všetky tri karty kategórií
+// (aj s tlačidlom Hrať) sú celé viditeľné bez posúvania – po slovensky aj po anglicky.
+test.describe('home page fits one viewport', () => {
+  test.describe.configure({ mode: 'parallel' });
+  test.beforeEach(({ page: _page }, info) => {
+    test.skip(info.project.name !== 'chromium', 'layout matrix runs in chromium');
+  });
+
+  for (const [width, height] of VIEWPORTS) {
+    test.describe(`${width}x${height}`, () => {
+      test.use(contextFor(width, height));
+
+      for (const lang of ['sk', 'en']) {
+        test(`home (${lang}) fits without scrolling`, async ({ page }) => {
+          await page.addInitScript((l) => localStorage.setItem('zapalkovo.lang', JSON.stringify(l)), lang);
+          await page.goto('./#/');
+          await expect(page.locator('.category-card')).toHaveCount(3);
+          await expect(page.locator('html')).toHaveAttribute('lang', lang);
+          const m = await page.evaluate(() => {
+            const rect = (el) => {
+              const r = el.getBoundingClientRect();
+              return { top: r.top, left: r.left, bottom: r.bottom, right: r.right, height: r.height };
+            };
+            return {
+              sh: document.documentElement.scrollHeight,
+              sw: document.documentElement.scrollWidth,
+              ih: window.innerHeight,
+              iw: window.innerWidth,
+              header: rect(document.querySelector('.site-header-inner')),
+              title: rect(document.querySelector('#home-title')),
+              cards: [...document.querySelectorAll('.category-card')].map(rect),
+              ctas: [...document.querySelectorAll('.category-card .card-cta')].map(rect),
+            };
+          });
+          const tag = `${width}x${height} ${lang}`;
+          expect(m.sh, `${tag}: vertical scroll`).toBeLessThanOrEqual(m.ih);
+          expect(m.sw, `${tag}: horizontal scroll`).toBeLessThanOrEqual(m.iw);
+          const inside = (r) => r.top >= -0.5 && r.left >= -0.5 && r.bottom <= m.ih + 0.5 && r.right <= m.iw + 0.5;
+          expect(inside(m.header), `${tag}: header inside the viewport`).toBe(true);
+          expect(inside(m.title), `${tag}: hero title inside the viewport`).toBe(true);
+          m.cards.forEach((r, i) => expect(inside(r), `${tag}: card ${i + 1} inside the viewport`).toBe(true));
+          m.ctas.forEach((r, i) => expect(inside(r) && r.height > 0, `${tag}: CTA ${i + 1} visible`).toBe(true));
+          // Tlačidlo Hrať je naozaj klikateľné (nič ho neprekrýva) a otvorí hru
+          await page.locator('.category-card .card-cta').last().click();
+          await expect(page).toHaveURL(/#\/play\/logic/);
+        });
+      }
+    });
+  }
+});

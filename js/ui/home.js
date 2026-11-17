@@ -115,13 +115,17 @@ function categoryCard(category, index, { data, queue, i18n }) {
   const cta = textEl('span', 'card-cta', i18n.t('home.play'));
   cta.append(svgIcon('i-next', 'card-cta-arrow'));
 
+  // Spodný riadok karty: počet vyriešených vľavo, „Hrať“ vpravo (šetrí výšku)
+  const foot = document.createElement('span');
+  foot.className = 'card-foot';
+  foot.append(progress, cta);
+
   link.append(
     textEl('span', 'card-no', i18n.t('home.cardNo', { n: index + 1 })),
     art,
     textEl('span', 'card-title', i18n.pick(category.name)),
     textEl('span', 'card-desc', i18n.pick(category.description)),
-    progress,
-    cta,
+    foot,
   );
   const item = document.createElement('li');
   item.append(link);
