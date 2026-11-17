@@ -151,7 +151,10 @@ async function init() {
     window.__zapalkovoGame = game;
   }
   showHome();
-  if (currentRoute.view === 'play') showPlay(currentRoute);
+  if (currentRoute.view === 'play') {
+    if (game) showPlay(currentRoute);
+    else window.location.hash = '#/'; // úlohy sa nenačítali: chybu ukáže domovská obrazovka
+  }
 }
 
 init();

@@ -34,6 +34,15 @@ test.describe('page shell', () => {
     await expect(page.locator('#message')).toHaveAttribute('aria-live', 'polite');
   });
 
+  test('failed puzzle loading on a play route goes home and shows the error', async ({ page }) => {
+    await page.route('**/data/puzzles.json', (route) => route.fulfill({ status: 500, body: 'error' }));
+    await page.goto('./#/play/numbers');
+    await expect.poll(() => new URL(page.url()).hash).toBe('#/');
+    await expect(page.locator('#view-home')).toBeVisible();
+    await expect(page.locator('#view-play')).toBeHidden();
+    await expect(page.locator('#categories-status')).toContainText('nepodarilo načítať');
+  });
+
   test('language toggle switches to English and persists', async ({ page }) => {
     await page.goto('./#/help');
     await expect(page.locator('html')).toHaveAttribute('lang', 'sk');
