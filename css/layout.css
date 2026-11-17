@@ -628,6 +628,29 @@
   .controls [data-action="record"] { grid-area: record; }
   .controls [data-action="next"] { grid-area: next; }
 
+  /* Tlačidlo povolenia senzorov (iOS) dostane vlastný riadok nad „Ďalšou úlohou“ */
+  .controls:has(#sensors-btn:not([hidden])) {
+    grid-template-areas:
+      "hint hint solution solution reset reset"
+      "rotate rotate rotate record record record"
+      "sensors sensors sensors sensors sensors sensors"
+      "next next next next next next";
+  }
+
+  .controls:has(#sensors-btn:not([hidden])):has([data-action="next-solution"]:not([hidden])) {
+    grid-template-areas:
+      "hint hint solution solution alt alt"
+      "reset reset rotate rotate record record"
+      "sensors sensors sensors sensors sensors sensors"
+      "next next next next next next";
+  }
+
+  .controls #sensors-btn {
+    grid-area: sensors;
+    flex-direction: row;
+    min-height: var(--tap);
+  }
+
   .controls .btn-primary {
     flex-direction: row;
     min-height: var(--tap);

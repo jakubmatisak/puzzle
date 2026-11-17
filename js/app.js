@@ -10,6 +10,7 @@ import { startRouter } from './ui/router.js';
 import { createBoard } from './ui/board.js';
 import { createGame } from './ui/game.js';
 import { renderHome } from './ui/home.js';
+import { initSensors } from './ui/sensors.js';
 
 const VIEWS = ['home', 'play', 'help'];
 
@@ -124,6 +125,16 @@ async function init() {
   if (data) {
     game = createGame({
       root: document.getElementById('view-play'), board, queue, i18n, puzzles: data, storage,
+    });
+  }
+  if (game) {
+    initSensors({
+      onTiltLeft: () => game.showSolution(),
+      onDoubleShake: () => game.reset(),
+      i18n,
+      buttonEl: document.getElementById('sensors-btn'),
+      isActive: () => currentRoute.view === 'play',
+      onMessage: (key) => game.onBoardHint(key),
     });
   }
   // Testovacie háčiky pre E2E testy; na verejnom serveri neexistujú.
