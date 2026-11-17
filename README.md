@@ -33,7 +33,7 @@ Autori: Meno Priezvisko, Meno Priezvisko
 3. Zápalku chyť a potiahni na nové miesto (alebo do odkladacieho priestoru). Dvojklikom/dvojťukom ju otočíš o 45°.
 4. Keď úloha platí, zobrazí sa *Výborne!* a môžeš pokračovať *Ďalšou úlohou*.
 
-Klávesnica: Tab vyberie zápalku, šípky ju posúvajú, Enter ju položí, Escape vráti, R otočí.
+Klávesnica: Tab vyberie zápalku, šípky ju posúvajú, Enter ju položí na miesto pod ňou (ak tam je voľné miesto, inak sa vráti späť), Escape vráti, R otočí.
 Podrobný návod (aj na tlač) je priamo v aplikácii v sekcii **Návod**.
 
 ## Štruktúra projektu

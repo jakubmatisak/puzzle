@@ -94,3 +94,14 @@ describe('i18n', () => {
     expect(i18n.pick({})).toBe('');
   });
 });
+
+describe('texty nápovedy', () => {
+  it('odkladací priestor má jednotný názov', () => {
+    expect(STRINGS.sk['board.tray']).toBe('Odkladací priestor');
+    expect(STRINGS.en['board.tray']).toBe('Spare area');
+  });
+  it('rada „najprv otoč“ platí pre myš aj dotyk', () => {
+    expect(STRINGS.sk['game.needRotate']).toBe('Najprv zápalku otoč (dvojklik / dvojité ťuknutie alebo R).');
+    expect(STRINGS.en['game.needRotate']).toBe('Rotate the match first (double-click / double-tap or R).');
+  });
+});
