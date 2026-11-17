@@ -71,3 +71,12 @@ export function isTrueEquation(types, occupied) {
   const cells = [...text].map((ch, i) => ({ type: types[i], ch }));
   return evaluate(tokenize(cells));
 }
+
+/**
+ * Normalizuje text rovnice: odstráni medzery (prázdne bunky).
+ * @param {string} text
+ * @returns {string}
+ */
+export function normalizeText(text) {
+  return text.replace(/ /g, '');
+}
