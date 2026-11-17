@@ -6,7 +6,7 @@ const LANGS = ['sk', 'en'];
 /** Nahradí {meno} v texte hodnotami z params; neznáme zástupné znaky nechá nezmenené. */
 function interpolate(text, params) {
   return text.replace(/\{(\w+)\}/g, (match, name) =>
-    name in params ? String(params[name]) : match);
+    Object.hasOwn(params, name) ? String(params[name]) : match);
 }
 
 /**
@@ -16,7 +16,7 @@ function interpolate(text, params) {
  */
 export function createI18n(storage, defaultLang = 'sk') {
   const stored = storage.get(LANG_KEY, null);
-  let lang = LANGS.includes(stored) ? stored : defaultLang;
+  let lang = LANGS.includes(stored) ? stored : (LANGS.includes(defaultLang) ? defaultLang : 'sk');
 
   /** Nastaví jazyk a uloží ho; neznámy jazyk ignoruje. */
   function setLang(next) {
@@ -27,13 +27,13 @@ export function createI18n(storage, defaultLang = 'sk') {
 
   /** Vráti preklad kľúča s dosadenými parametrami; chýbajúci kľúč vráti kľúč samotný. */
   function t(key, params = {}) {
-    const text = STRINGS[lang][key];
+    const text = Object.hasOwn(STRINGS[lang], key) ? STRINGS[lang][key] : undefined;
     return text === undefined ? key : interpolate(text, params);
   }
 
   /** Z objektu {sk, en} vyberie text v aktuálnom jazyku (záloha: sk, potom ''). */
   function pick(obj) {
-    return obj[lang] ?? obj.sk ?? '';
+    return obj?.[lang] || obj?.sk || '';
   }
 
   return {

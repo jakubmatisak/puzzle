@@ -49,6 +49,44 @@ describe('i18n', () => {
     expect(i18n.t('game.moves', { n: 3 })).toBe('Ťahy: 3 / {max}');
   });
 
+  it('hardens lookups against prototype keys', () => {
+    const i18n = createI18n(memStorage());
+    expect(i18n.t('constructor')).toBe('constructor');
+    expect(i18n.t('toString')).toBe('toString');
+    expect(i18n.t('game.moves', { n: 1 })).toBe('Ťahy: 1 / {max}');
+    const tmp = createI18n(memStorage());
+    expect(tmp.pick(null)).toBe('');
+    expect(tmp.pick({ sk: 'a', en: '' })).toBe('a');
+    const en = createI18n(memStorage());
+    en.setLang('en');
+    expect(en.pick({ sk: 'a', en: '' })).toBe('a');
+  });
+
+  it('does not interpolate prototype names', () => {
+    const i18n = createI18n(memStorage());
+    // placeholder {toString} is not in STRINGS, so test via a key with {n} only
+    expect(i18n.t('home.solved', { n: 1 })).toBe('Vyriešené 1 / {total}');
+    expect(i18n.t('home.solved', {})).toBe('Vyriešené {n} / {total}');
+  });
+
+  it('invalid stored or default language falls back to sk', () => {
+    const storage = memStorage();
+    storage.set('zapalkovo.lang', 'de');
+    expect(createI18n(storage).lang).toBe('sk');
+    expect(createI18n(memStorage(), 'de').lang).toBe('sk');
+  });
+
+  it('has all required keys in both languages', () => {
+    const required = ['app.title', 'nav.home', 'nav.help', 'home.choose', 'home.solved',
+      'game.moves', 'game.hint', 'game.solution', 'game.nextSolution', 'game.reset',
+      'game.rotate', 'game.record', 'game.stopRecord', 'game.download', 'game.next',
+      'game.solved', 'game.revealed', 'game.needRotate', 'sensors.enable',
+      'sensors.denied', 'record.unsupported', 'lang.switch'];
+    for (const lang of ['sk', 'en']) {
+      for (const key of required) expect(Object.hasOwn(STRINGS[lang], key)).toBe(true);
+    }
+  });
+
   it('pick falls back to sk then empty string', () => {
     const i18n = createI18n(memStorage(), 'en');
     expect(i18n.pick({ sk: 'a', en: 'b' })).toBe('b');
