@@ -119,7 +119,7 @@ test.describe('game controls', () => {
     await expect(page.locator('#success')).toBeHidden();
     await expect(page.locator('#controls [data-action="next-solution"]')).toBeHidden();
     await page.goto('./#/');
-    await expect(page.locator('#categories .category-card').first()).toContainText('Vyriešené 0 / 6');
+    await expect(page.locator('#categories .category-card').first()).toContainText('Vyriešené 0 / 7');
   });
 
   test('num-03 offers the next solution and switches to it', async ({ page }) => {
@@ -199,25 +199,25 @@ test.describe('queue and progress', () => {
     await page.reload();
     await page.waitForFunction(() => Boolean(window.__zapalkovoGame?.getCurrent()));
     expect(await currentId(page)).toBe(first[2]);
+    const all = DATA.puzzles.filter((p) => p.category === 'numbers').map((p) => p.id);
     const rest = [];
-    for (let i = 0; i < 3; i += 1) {
+    for (let i = 0; i < all.length - 3; i += 1) {
       const prev = await currentId(page);
       await next.click();
       await expect.poll(() => currentId(page)).not.toBe(prev);
       rest.push(await currentId(page));
     }
-    const all = DATA.puzzles.filter((p) => p.category === 'numbers').map((p) => p.id);
-    expect(new Set(rest).size).toBe(3);
+    expect(new Set(rest).size).toBe(all.length - 3);
     expect(rest.filter((id) => first.includes(id))).toEqual([]);
     expect([...first, ...rest].sort()).toEqual([...all].sort());
   });
 
-  test('home shows solved 1 / 6 after solving one puzzle', async ({ page }) => {
+  test('home shows solved 1 / 7 after solving one puzzle', async ({ page }) => {
     const puzzle = await openPuzzle(page, 'num-01');
     await solveByMouse(page, puzzle);
     await expect(page.locator('#success')).toBeVisible();
     await page.locator('.back-link').click();
-    await expect(page.locator('#categories .category-card').first()).toContainText('Vyriešené 1 / 6');
+    await expect(page.locator('#categories .category-card').first()).toContainText('Vyriešené 1 / 7');
   });
 
   test('next puzzle button in the success panel loads another puzzle', async ({ page }) => {
@@ -273,7 +273,7 @@ test.describe('review fixes', () => {
     await solveByMouse(page, puzzle);
     await expect(page.locator('#success')).toBeVisible();
     await page.locator('.back-link').click();
-    await expect(page.locator('#categories .category-card').first()).toContainText('Vyriešené 1 / 6');
+    await expect(page.locator('#categories .category-card').first()).toContainText('Vyriešené 1 / 7');
   });
 
   test('after a reveal, moving a match away and back does not count', async ({ page }) => {

@@ -153,6 +153,24 @@
       }
     },
     {
+      "id": "num-07",
+      "category": "numbers",
+      "mode": "move",
+      "moves": 1,
+      "start": "3-7=4",
+      "solutions": [
+        "3+1=4"
+      ],
+      "task": {
+        "sk": "Presuň jednu zápalku tak, aby rovnica platila.",
+        "en": "Move one match so the equation becomes true."
+      },
+      "hint": {
+        "sk": "Znamienko nemusí ostať mínus.",
+        "en": "The sign doesn't have to stay a minus."
+      }
+    },
+    {
       "id": "rom-01",
       "category": "roman",
       "mode": "move",

@@ -16,7 +16,7 @@ Autori: Meno Priezvisko, Meno Priezvisko
 |---|---|
 | Responzivita, ťahanie zápaliek | Mobile-first rozloženie (telefón na výšku aj na šírku, tablet, desktop), vektorová grafika v SVG (`viewBox`), ťahanie myšou aj prstom cez Pointer Events, prichytenie k najbližšiemu voľnému miestu (snap), otáčanie o 45° (dvojklik/dvojťuk, kláves R, tlačidlo *Otočiť*), skladanie dvoch zápaliek cez seba (znamienko +, rímske X). |
 | Úlohy v JSON | Všetky úlohy sú v `data/puzzles.json` (zadanie, nápoveda, riešenia; SK + EN). Úloha môže mať viac riešení. |
-| ≥ 15 úloh, 3 kategórie | 18 úloh: *Rovnice* (6), *Rímske čísla* (6), *Logické útvary* (6). |
+| ≥ 15 úloh, 3 kategórie | 19 úloh: *Rovnice* (7), *Rímske čísla* (6), *Logické útvary* (6). |
 | Náhodné poradie bez opakovania | Úlohy kategórie prichádzajú náhodne; kým sa neprejdú všetky, žiadna sa nezopakuje. Poradie aj rozohraná úloha sa pamätajú v `localStorage` (prerušenie hry a návrat). |
 | Koniec hry, nápoveda, riešenie, reset | Rozpoznanie vyriešenej úlohy (zoznam riešení + vyhodnotenie rovnice), počítadlo ťahov, *Nápoveda*, *Riešenie* (animované, pri viacerých riešeniach *Ďalšie riešenie*), *Reset*, *Ďalšia úloha*. |
 | Senzory | Na mobile: náklon doľava = zobrazí riešenie, dvojité zatrasenie = reset. Na iPhone sa senzory povoľujú tlačidlom. |

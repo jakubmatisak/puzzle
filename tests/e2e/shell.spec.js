@@ -16,7 +16,7 @@ test.describe('page shell', () => {
     const cards = page.locator('#categories .category-card');
     await expect(cards).toHaveCount(3);
     await expect(cards.first()).toHaveAttribute('href', '#/play/numbers');
-    await expect(cards.first()).toContainText('Vyriešené 0 / 6');
+    await expect(cards.first()).toContainText('Vyriešené 0 / 7');
   });
 
   test('#/help shows the help view only', async ({ page }) => {

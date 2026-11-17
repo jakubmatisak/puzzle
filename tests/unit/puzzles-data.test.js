@@ -108,6 +108,18 @@ describe('data/puzzles.json', () => {
     expect(rotates).toBe(true);
   });
 
+  it('aspoň jedna úloha mení − na + a každé jej riešenie vyžaduje rotáciu', () => {
+    const needsRotation = (p, i) => solutionPlan(p, i).some(({ from, to }) => to !== 'tray'
+      && angleDiff(p.board.slotById.get(from).angle, p.board.slotById.get(to).angle) > 23);
+    const minusToPlus = (p, text) => {
+      const start = json.puzzles.find((r) => r.id === p.id).start;
+      return [...text].some((ch, i) => ch === '+' && start[i] === '-');
+    };
+    const found = puzzles.some((p) => p.kind === 'equation'
+      && p.solutions.every((_, i) => needsRotation(p, i) && minusToPlus(p, p.solutionTexts[i])));
+    expect(found).toBe(true);
+  });
+
   it('aspoň jedno riešenie skladá + z dvoch zápaliek cez seba', () => {
     const stacks = puzzles.some((p) => p.kind === 'equation' && p.solutionTexts.some(
       (text) => [...text].some((ch, i) => ch === '+' && json.puzzles.find((r) => r.id === p.id).start[i] !== '+'),
