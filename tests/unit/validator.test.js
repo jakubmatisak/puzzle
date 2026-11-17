@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { isSolved } from '../../js/core/validator.js';
 import { solveEquation } from '../../js/core/solver.js';
-import { createState, moveToSlot, moveToTray } from '../../js/core/puzzle-state.js';
+import { createState, occupied, moveToSlot, moveToTray } from '../../js/core/puzzle-state.js';
 import { buildBoard } from '../../js/core/board-model.js';
 import { layoutEquation, encodeText } from '../../js/core/glyphs.js';
+import { isTrueEquation } from '../../js/core/decode.js';
 import { gridSlots } from '../../js/core/lattice.js';
 
 function equationPuzzle(start, sols, moves = 1) {
@@ -16,9 +17,9 @@ function equationPuzzle(start, sols, moves = 1) {
   };
 }
 
-function gridPuzzle(moves, count, removed) {
+function gridPuzzle(moves, count, removed, without = []) {
   const slots = gridSlots(2, 2);
-  const start = new Set(slots.map((s) => s.id));
+  const start = new Set(slots.map((s) => s.id).filter((id) => !without.includes(id)));
   return {
     id: 'log', kind: 'shapes', mode: 'remove', moves,
     board: buildBoard(slots), start,
@@ -29,6 +30,10 @@ function gridPuzzle(moves, count, removed) {
 }
 
 const matchAt = (state, slot) => state.matches.find((m) => m.slot === slot).id;
+const removeMatches = (state, ids) => ids.reduce(
+  (acc, id) => moveToTray(acc, matchAt(acc, id), { x: 0, y: 0 }),
+  state,
+);
 
 describe('isSolved - move', () => {
   const puzzle = equationPuzzle('9+4=5', ['5+4=9']);
@@ -48,6 +53,17 @@ describe('isSolved - move', () => {
     const s = createState(puzzle);
     const t = moveToTray(s, matchAt(s, 'c0.b'), { x: 0, y: 0 });
     expect(isSolved(t, puzzle)).toBe(false);
+  });
+});
+
+describe('isSolved - tray check (move mode)', () => {
+  it('rejects a correct board when an extra match lies in the tray', () => {
+    const puzzle = equationPuzzle('9+4=5', ['5+4=9']);
+    const s = createState(puzzle);
+    const solved = moveToSlot(s, matchAt(s, 'c0.b'), 'c4.b', puzzle.board);
+    expect(isSolved(solved, puzzle)).toBe(true);
+    const extra = { id: 'mx', slot: null, x: 0, y: 0, angle: 90 };
+    expect(isSolved({ matches: [...solved.matches, extra] }, puzzle)).toBe(false);
   });
 });
 
@@ -73,10 +89,7 @@ describe('isSolved - two moves', () => {
 });
 
 describe('isSolved - remove', () => {
-  const removeAll = (state, ids) => ids.reduce(
-    (acc, id) => moveToTray(acc, matchAt(acc, id), { x: 0, y: 0 }),
-    state,
-  );
+  const removeAll = removeMatches;
   const p = gridPuzzle(2, 2, ['h1-0', 'v0-1']);
 
   it('removing h1-0 and v0-1 solves', () => {
@@ -90,20 +103,63 @@ describe('isSolved - remove', () => {
   });
 });
 
+describe('isSolved - semantic path without listed solution', () => {
+  it('equation: unlisted true 8-4=4 is accepted when only 0+4=4 is listed', () => {
+    const full = equationPuzzle('6+4=4', ['0+4=4', '8-4=4']);
+    const puzzle = { ...full, solutions: [full.solutions[0]] };
+    const target = encodeText('8-4=4', full.types);
+    const [from] = [...puzzle.start].filter((id) => !target.has(id));
+    const [to] = [...target].filter((id) => !puzzle.start.has(id));
+    const s = createState(puzzle);
+    expect(isSolved(moveToSlot(s, matchAt(s, from), to, puzzle.board), puzzle)).toBe(true);
+  });
+  it('shapes: unlisted symmetric removal giving 2 squares is accepted', () => {
+    const p = gridPuzzle(2, 2, ['h1-0', 'v0-1']); // only this pair is listed
+    expect(isSolved(removeMatches(createState(p), ['h1-1', 'v1-1']), p)).toBe(true);
+  });
+  it('shapes: right square count with a loose stick is rejected', () => {
+    // keep one unit square plus loose h2-1 (5 sticks), remove the other 7
+    const keep = ['h0-0', 'h1-0', 'v0-0', 'v0-1', 'h2-1'];
+    const removed = gridSlots(2, 2).map((x) => x.id).filter((id) => !keep.includes(id));
+    const p = { ...gridPuzzle(7, 1, removed), solutions: [] };
+    expect(isSolved(removeMatches(createState(p), removed), p)).toBe(false);
+    const clean = removed.concat('h2-1');
+    const q = { ...gridPuzzle(8, 1, clean), solutions: [] };
+    expect(isSolved(removeMatches(createState(q), clean), q)).toBe(true); // control
+  });
+  it('remove mode: a match placed outside start is rejected', () => {
+    const p = { ...gridPuzzle(1, 2, ['h1-0', 'v0-1'], ['h2-1']), solutions: [] };
+    let s = createState(p);
+    s = moveToTray(s, matchAt(s, 'v0-1'), { x: 0, y: 0 });
+    s = moveToSlot(s, matchAt(s, 'h1-0'), 'h2-1', p.board);
+    expect([...occupied(s)].every((id) => p.start.has(id))).toBe(false);
+    expect(isSolved(s, p)).toBe(false);
+  });
+});
+
 describe('solveEquation', () => {
   const num03 = equationPuzzle('6+4=4', ['0+4=4', '8-4=4']);
 
-  it('num-03 contains 0+4=4 and 8-4=4', () => {
-    const r = solveEquation(num03);
-    expect(r).toContain('0+4=4');
-    expect(r).toContain('8-4=4');
+  it('num-01 gives exactly 5+4=9', () => {
+    expect(solveEquation(equationPuzzle('9+4=5', ['5+4=9']))).toEqual(['5+4=9']);
   });
-  it('num-01 contains 5+4=9', () => {
-    expect(solveEquation(equationPuzzle('9+4=5', ['5+4=9']))).toContain('5+4=9');
+  it('num-03 gives exactly these true texts (5+4=9 is a third, unlisted one)', () => {
+    expect(solveEquation(num03)).toEqual(['0+4=4', '5+4=9', '8-4=4']);
   });
-  it('result is sorted and unique', () => {
-    const r = solveEquation(num03);
-    expect(r).toEqual([...new Set(r)].sort());
+  it('every result is a true equation and differs from the start', () => {
+    for (const text of solveEquation(num03)) {
+      expect(isTrueEquation(num03.types, encodeText(text, num03.types))).toBe(true);
+      expect(text).not.toBe('6+4=4');
+    }
+  });
+  it('blank cells: VII+I=VIII appears once, without spaces', () => {
+    const rom = equationPuzzle('VIII+I=VII ', ['VII +I=VIII']);
+    expect(solveEquation(rom)).toEqual(['VII+I=VIII']);
+  });
+  it('moves = 2 on num-01 does not contain the 1-move result', () => {
+    const r = solveEquation(equationPuzzle('9+4=5', ['5+4=9'], 2));
+    expect(r).not.toContain('5+4=9');
+    expect(r).toEqual(['2+4=6', '4+4=8', '8+1=9', '9+4>5']);
   });
   it('throws for remove mode and for more than 2 moves', () => {
     expect(() => solveEquation({ ...num03, mode: 'remove' })).toThrow();

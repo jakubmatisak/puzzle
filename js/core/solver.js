@@ -1,7 +1,8 @@
 /**
  * Solver hrubou silou: nájde všetky pravdivé rovnice dosiahnuteľné k presunmi.
  */
-import { decodeBoard, isTrueEquation, normalizeText } from './decode.js';
+import { decodeBoard, normalizeText } from './decode.js';
+import { tokenize, evaluate } from './expression.js';
 
 /** Všetky k-prvkové kombinácie poľa (k ≤ 2). */
 function combinations(items, k) {
@@ -12,6 +13,11 @@ function combinations(items, k) {
     for (let j = i + 1; j < items.length; j++) out.push([items[i], items[j]]);
   }
   return out;
+}
+
+/** Je dek�dovan� text pravdiv� rovnica? */
+function isTrue(text, types) {
+  return evaluate(tokenize([...text].map((ch, i) => ({ type: types[i], ch }))));
 }
 
 /**
@@ -31,7 +37,8 @@ export function solveEquation(puzzle) {
       const occ = new Set(puzzle.start);
       vacate.forEach((id) => occ.delete(id));
       fill.forEach((id) => occ.add(id));
-      if (isTrueEquation(puzzle.types, occ)) found.add(normalizeText(decodeBoard(puzzle.types, occ)));
+      const text = decodeBoard(puzzle.types, occ);
+      if (text !== null && isTrue(text, puzzle.types)) found.add(normalizeText(text));
     }
   }
   return [...found].sort();

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { layoutEquation, encodeText } from '../../js/core/glyphs.js';
-import { decodeCell, decodeBoard, isTrueEquation } from '../../js/core/decode.js';
+import { decodeCell, decodeBoard, isTrueEquation, normalizeText } from '../../js/core/decode.js';
 
 // Prázdny stĺpec potrebuje druhý, vyplnený tvar rovnice (ako v dátach úloh).
 const LAYOUTS = {
@@ -50,5 +50,12 @@ describe('isTrueEquation', () => {
   it('neplatná doska je false', () => {
     const { types } = layoutEquation(['9+4=5']);
     expect(isTrueEquation(types, new Set(['c1.v']))).toBe(false);
+  });
+});
+
+describe('normalizeText', () => {
+  it('removes all spaces', () => {
+    expect(normalizeText('VII +I=VIII')).toBe('VII+I=VIII');
+    expect(normalizeText(' 5 ')).toBe('5');
   });
 });
