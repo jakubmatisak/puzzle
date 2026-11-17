@@ -100,7 +100,7 @@ function prefersReducedMotion() {
  * @param {{onChange?:(state:object)=>void, onHint?:(key:string)=>void, t?:(key:string, params?:object)=>string}} [opts]
  *   onChange po každej zmene stavu, onHint s kľúčom hlášky, t na preklad popisov
  * @returns {object} API dosky (load, setState, getState, getSelected, rotateSelected,
- *   animatePlan, getDragInfo, setInteractive)
+ *   animatePlan, getAnimatedMatches, getDragInfo, setInteractive)
  */
 export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (key) => key } = {}) {
   let board = null;
@@ -113,6 +113,7 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
   let generation = 0; // zvýšenie zastaví bežiacu animáciu riešenia
   const matchEls = new Map();
   const slotEls = new Map();
+  const animated = new Map(); // id zápalky -> {x, y, angle} počas animácie riešenia
   const layers = { slots: svgEl('g', { class: 'slots' }), tray: svgEl('g'), matches: svgEl('g', { class: 'matches' }) };
 
   // ---------- kreslenie ----------
@@ -191,6 +192,7 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
   function cancelAnimation() {
     generation += 1;
     animating = false;
+    animated.clear();
   }
 
   /** Nájde zápalku v stave podľa id. */
@@ -441,13 +443,18 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
           return;
         }
         const k = easeInOut(Math.min(1, (now - t0) / ms));
-        g.setAttribute('transform', transformOf(
-          from.x + (to.x - from.x) * k,
-          from.y + (to.y - from.y) * k,
-          lerpAngle(from.angle, to.angle, k),
-        ));
+        const pos = {
+          x: from.x + (to.x - from.x) * k,
+          y: from.y + (to.y - from.y) * k,
+          angle: lerpAngle(from.angle, to.angle, k),
+        };
+        animated.set(matchId, pos);
+        g.setAttribute('transform', transformOf(pos.x, pos.y, pos.angle));
         if (k < 1) requestAnimationFrame(frame);
-        else resolve();
+        else {
+          animated.delete(matchId);
+          resolve();
+        }
       };
       requestAnimationFrame(frame);
     });
@@ -541,6 +548,13 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
       } finally {
         if (token === generation) animating = false;
       }
+    },
+    /**
+     * Polohy zápaliek, ktoré sa práve presúvajú animáciou riešenia (napr. pre video).
+     * @returns {Map<string, {x:number, y:number, angle:number}>} id zápalky -> poloha
+     */
+    getAnimatedMatches() {
+      return new Map(animated);
     },
     /** Poloha práve ťahanej zápalky alebo null. */
     getDragInfo() {

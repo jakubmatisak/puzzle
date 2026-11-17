@@ -157,6 +157,22 @@ test.describe('video recording', () => {
     await expect(page.locator('#rec-download')).not.toBeFocused();
   });
 
+  test('the video scene follows the solution animation (gliding match)', async ({ page }) => {
+    await openPuzzle(page);
+    const xs = await page.evaluate(async () => {
+      const game = window.__zapalkovoGame;
+      const id = game.getScene().matches.find((m) => m.slot === 'c0.b').id;
+      const sceneX = () => game.getScene().matches.find((m) => m.id === id).x;
+      const done = game.showSolution(); // num-01: zápalka ide z c0.b (x 100) do c4.b (x 700)
+      await new Promise((resolve) => { setTimeout(resolve, 300); });
+      const during = sceneX();
+      await done;
+      return { during, after: sceneX() };
+    });
+    expect(xs.during).toBeGreaterThan(100);
+    expect(xs.during).toBeLessThan(xs.after);
+  });
+
   test('without MediaRecorder the button is disabled with a note', async ({ page }) => {
     await page.addInitScript(() => {
       delete window.MediaRecorder;

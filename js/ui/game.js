@@ -299,9 +299,10 @@ export function createGame({ root, board, queue, i18n, puzzles, storage = null }
   /** Aktuálna scéna pre nahrávanie videa (drawScene v canvas-renderer.js). */
   function getScene() {
     if (!puzzle) return null;
+    const moving = board.getAnimatedMatches(); // animácia riešenia: poloha „za letu“
     return {
       board: puzzle.board,
-      matches: board.getState().matches,
+      matches: board.getState().matches.map((m) => ({ ...m, ...moving.get(m.id) })),
       drag: board.getDragInfo(),
       solved,
       title: i18n.pick(puzzle.task),
