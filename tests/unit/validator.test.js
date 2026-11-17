@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isSolved } from '../../js/core/validator.js';
+import { isSolved, sameSet } from '../../js/core/validator.js';
 import { solveEquation } from '../../js/core/solver.js';
 import { createState, occupied, moveToSlot, moveToTray } from '../../js/core/puzzle-state.js';
 import { buildBoard } from '../../js/core/board-model.js';
@@ -164,5 +164,13 @@ describe('solveEquation', () => {
   it('throws for remove mode and for more than 2 moves', () => {
     expect(() => solveEquation({ ...num03, mode: 'remove' })).toThrow();
     expect(() => solveEquation({ ...num03, moves: 3 })).toThrow();
+  });
+});
+
+describe('sameSet', () => {
+  it('porovná množiny bez ohľadu na poradie', () => {
+    expect(sameSet(new Set(['a', 'b']), new Set(['b', 'a']))).toBe(true);
+    expect(sameSet(new Set(['a']), new Set(['a', 'b']))).toBe(false);
+    expect(sameSet(new Set(['a', 'c']), new Set(['a', 'b']))).toBe(false);
   });
 });

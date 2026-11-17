@@ -46,6 +46,7 @@ const APP_SHELL = [
   './js/ui/recording-ui.js',
   './js/ui/router.js',
   './js/ui/sensors.js',
+  './js/ui/svg.js',
   './js/ui/sw-register.js',
   './data/puzzles.json',
 ];

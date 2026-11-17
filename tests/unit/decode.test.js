@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { layoutEquation, encodeText } from '../../js/core/glyphs.js';
-import { decodeCell, decodeBoard, isTrueEquation, normalizeText } from '../../js/core/decode.js';
+import {
+  decodeCell, decodeBoard, isTrueEquation, isTrueText, normalizeText,
+} from '../../js/core/decode.js';
 
 // Prázdny stĺpec potrebuje druhý, vyplnený tvar rovnice (ako v dátach úloh).
 const LAYOUTS = {
@@ -57,5 +59,13 @@ describe('normalizeText', () => {
   it('removes all spaces', () => {
     expect(normalizeText('VII +I=VIII')).toBe('VII+I=VIII');
     expect(normalizeText(' 5 ')).toBe('5');
+  });
+});
+
+describe('isTrueText', () => {
+  it('vyhodnotí dekódovaný text podľa typov buniek', () => {
+    const types = ['digit', 'op', 'digit', 'rel', 'digit'];
+    expect(isTrueText('5+4=9', types)).toBe(true);
+    expect(isTrueText('9+4=5', types)).toBe(false);
   });
 });

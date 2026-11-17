@@ -4,26 +4,18 @@
  * Stav úlohy sa mení iba cez funkcie z puzzle-state.js.
  */
 import {
-  angleDiff, distance, findSnapSlot, rotateStep, segmentDistance,
+  angleDiff, distance, findSnapSlot, rotateStep, segmentDistance, segmentEnds,
+  MATCH_HALF, SNAP_RADIUS, SNAP_MAX_ANGLE,
 } from '../core/geometry.js';
 import {
   moveToSlot, moveToTray, occupied, rotateMatch, trayMatches, trayPosition,
 } from '../core/puzzle-state.js';
+import { svgEl } from './svg.js';
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
-const HALF = 50; // polovica dĺžky zápalky
 const CLICK_PX = 8; // menší pohyb prsta/myši (v CSS px) je klik, nie ťah
 const GRAB_PX = 22; // zápalku chytí stlačenie do 22 CSS px od jej osi
 const DOUBLE_CLICK_MS = 300;
 const KEY_STEP = 10; // posun šípkou
-const SNAP = { radius: 45, maxAngle: 23 };
-
-/** Vytvorí SVG prvok s atribútmi. */
-function svgEl(name, attrs = {}) {
-  const el = document.createElementNS(SVG_NS, name);
-  Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, String(v)));
-  return el;
-}
 
 /** Zaokrúhli na 2 desatinné miesta (kratšie atribúty transform). */
 function round(n) {
@@ -52,14 +44,12 @@ function createDefs() {
 
 /** Prerušovaná čiara slotu (úsečka dĺžky 100 so stredom v slote). */
 function createSlot(slot) {
-  const rad = (slot.angle * Math.PI) / 180;
-  const dx = HALF * Math.cos(rad);
-  const dy = HALF * Math.sin(rad);
+  const [p, q] = segmentEnds(slot);
   return svgEl('line', {
     class: 'slot',
     'data-slot': slot.id,
-    x1: round(slot.x - dx), y1: round(slot.y - dy),
-    x2: round(slot.x + dx), y2: round(slot.y + dy),
+    x1: round(p.x), y1: round(p.y),
+    x2: round(q.x), y2: round(q.y),
   });
 }
 
@@ -83,7 +73,7 @@ function clampToTray(p, tray) {
   const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
   return {
     x: clamp(p.x, tray.x + 20, tray.x + tray.w - 20),
-    y: clamp(p.y, tray.y + HALF + 12, tray.y + tray.h - HALF - 12),
+    y: clamp(p.y, tray.y + MATCH_HALF + 12, tray.y + tray.h - MATCH_HALF - 12),
   };
 }
 
@@ -241,7 +231,7 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
     let best = null;
     let bestDist = Infinity;
     for (const g of layers.matches.children) {
-      const d = segmentDistance(p, findMatch(g.dataset.match), HALF);
+      const d = segmentDistance(p, findMatch(g.dataset.match));
       if (d <= limit && d <= bestDist) {
         best = g.dataset.match;
         bestDist = d;
@@ -267,14 +257,14 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
   /** Slot, do ktorého by ťahaná zápalka práve zapadla (alebo null). */
   function candidateSlot() {
     if (!drag) return null;
-    return findSnapSlot(drag, board.slots, occupiedByOthers(drag.matchId), SNAP);
+    return findSnapSlot(drag, board.slots, occupiedByOthers(drag.matchId));
   }
 
   /** Je v dosahu voľný slot, ktorý má iba inú orientáciu? */
   function needsRotation() {
     const taken = occupiedByOthers(drag.matchId);
     return board.slots.some((s) => !taken.has(s.id)
-      && distance(drag, s) <= SNAP.radius && angleDiff(drag.angle, s.angle) > SNAP.maxAngle);
+      && distance(drag, s) <= SNAP_RADIUS && angleDiff(drag.angle, s.angle) > SNAP_MAX_ANGLE);
   }
 
   /** Začne ťah zápalky (pointerId null = klávesnica; client = bod na obrazovke). */

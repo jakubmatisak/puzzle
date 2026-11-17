@@ -1,9 +1,9 @@
 /**
  * Solver hrubou silou: nájde všetky pravdivé rovnice dosiahnuteľné k presunmi.
  */
-import { decodeBoard, normalizeText } from './decode.js';
+import { decodeBoard, isTrueText, normalizeText } from './decode.js';
 import { encodeText } from './glyphs.js';
-import { tokenize, evaluate } from './expression.js';
+import { sameSet } from './validator.js';
 
 /** Všetky k-prvkové kombinácie poľa (k ≤ 2). */
 function combinations(items, k) {
@@ -14,16 +14,6 @@ function combinations(items, k) {
     for (let j = i + 1; j < items.length; j++) out.push([items[i], items[j]]);
   }
   return out;
-}
-
-/** Rovnosť dvoch množín. */
-function sameSet(a, b) {
-  return a.size === b.size && [...a].every((x) => b.has(x));
-}
-
-/** Je dekódovaný text pravdivá rovnica? */
-function isTrue(text, types) {
-  return evaluate(tokenize([...text].map((ch, i) => ({ type: types[i], ch }))));
 }
 
 /**
@@ -47,7 +37,7 @@ export function solveEquation(puzzle, { canonicalOnly = false } = {}) {
       vacate.forEach((id) => occ.delete(id));
       fill.forEach((id) => occ.add(id));
       const text = decodeBoard(puzzle.types, occ);
-      if (text === null || !isTrue(text, puzzle.types)) continue;
+      if (text === null || !isTrueText(text, puzzle.types)) continue;
       if (canonicalOnly && !sameSet(occ, encodeText(text, puzzle.types))) continue;
       found.add(normalizeText(text));
     }

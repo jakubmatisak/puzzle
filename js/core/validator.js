@@ -5,8 +5,13 @@ import { occupied, trayMatches, movesUsed } from './puzzle-state.js';
 import { isTrueEquation } from './decode.js';
 import { checkShapes } from './lattice.js';
 
-/** Rovnosť dvoch množín. */
-function sameSet(a, b) {
+/**
+ * Rovnosť dvoch množín (rovnaké prvky, poradie nehrá rolu).
+ * @param {Set<string>} a
+ * @param {Set<string>} b
+ * @returns {boolean}
+ */
+export function sameSet(a, b) {
   return a.size === b.size && [...a].every((x) => b.has(x));
 }
 

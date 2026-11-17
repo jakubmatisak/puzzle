@@ -1,15 +1,7 @@
 /**
  * Domovská obrazovka: karty kategórií s ilustráciou a počtom vyriešených úloh.
  */
-
-const SVG_NS = 'http://www.w3.org/2000/svg';
-
-/** Vytvorí SVG prvok s atribútmi. */
-function svgEl(name, attrs = {}) {
-  const el = document.createElementNS(SVG_NS, name);
-  Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, String(v)));
-  return el;
-}
+import { svgEl } from './svg.js';
 
 /** Jedna zápalka (palička + hlavička) so stredom v (x, y) a uhlom v stupňoch. */
 function matchShape(x, y, angle, extraClass = '') {

@@ -3,8 +3,8 @@
  * (tmavé drevo, zápalky s gradientom a červenou hlavičkou), farby sú pevné
  * v oboch farebných témach. Nezávisí od DOM – dostane iba 2D kontext.
  */
+import { segmentEnds } from '../core/geometry.js';
 
-const HALF = 50; // polovica dĺžky zápalky
 export const CAPTION_H = 56; // výška pruhu s popisom úplne dole
 const MIN_H = 360;
 const MAX_H = 960;
@@ -98,12 +98,10 @@ function drawSlots(ctx, slots) {
   ctx.lineCap = 'round';
   ctx.setLineDash([6, 8]);
   slots.forEach((slot) => {
-    const rad = (slot.angle * Math.PI) / 180;
-    const dx = HALF * Math.cos(rad);
-    const dy = HALF * Math.sin(rad);
+    const [p, q] = segmentEnds(slot);
     ctx.beginPath();
-    ctx.moveTo(slot.x - dx, slot.y - dy);
-    ctx.lineTo(slot.x + dx, slot.y + dy);
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(q.x, q.y);
     ctx.stroke();
   });
   ctx.setLineDash([]);

@@ -1,8 +1,7 @@
 /**
  * Model hracej plochy: obálka slotov a odkladacia plocha pod nimi.
  */
-
-const HALF = 50; // polovica dĺžky zápalky
+import { segmentEnds } from './geometry.js';
 
 /**
  * Obdĺžnik, ktorý obalí koncové body všetkých slotov.
@@ -15,14 +14,11 @@ function segmentExtent(slots) {
   let maxX = -Infinity;
   let maxY = -Infinity;
   for (const s of slots) {
-    const rad = (s.angle * Math.PI) / 180;
-    const dx = HALF * Math.cos(rad);
-    const dy = HALF * Math.sin(rad);
-    for (const [px, py] of [[s.x - dx, s.y - dy], [s.x + dx, s.y + dy]]) {
-      minX = Math.min(minX, px);
-      minY = Math.min(minY, py);
-      maxX = Math.max(maxX, px);
-      maxY = Math.max(maxY, py);
+    for (const p of segmentEnds(s)) {
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
     }
   }
   return { minX, minY, maxX, maxY };

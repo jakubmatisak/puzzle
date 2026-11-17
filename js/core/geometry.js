@@ -3,6 +3,13 @@
  * Zápalka je symetrická, preto sa uhly počítajú modulo 180.
  */
 
+/** Polovica dĺžky zápalky (zápalka má dĺžku 100 jednotiek SVG). */
+export const MATCH_HALF = 50;
+/** Do akej vzdialenosti od stredu slotu sa pustená zápalka prichytí. */
+export const SNAP_RADIUS = 45;
+/** Najväčší uhlový rozdiel (mod 180), pri ktorom sa zápalka ešte prichytí. */
+export const SNAP_MAX_ANGLE = 23;
+
 /**
  * Zníži uhol do intervalu 0 až 179.999 (modulo 180).
  * @param {number} a uhol v stupňoch
@@ -52,7 +59,7 @@ export function distance(p, q) {
  * @returns {object|null} slot alebo null, ak nič nevyhovuje
  */
 export function findSnapSlot(pos, slots, occupied, opts = {}) {
-  const { radius = 45, maxAngle = 23 } = opts;
+  const { radius = SNAP_RADIUS, maxAngle = SNAP_MAX_ANGLE } = opts;
   let best = null;
   let bestDist = Infinity;
   for (const slot of slots) {
@@ -68,6 +75,19 @@ export function findSnapSlot(pos, slots, occupied, opts = {}) {
 }
 
 /**
+ * Oba koncové body úsečky zápalky alebo slotu so stredom (x, y) a uhlom.
+ * @param {{x:number, y:number, angle:number}} s stred a uhol
+ * @param {number} [half] polovica dĺžky (MATCH_HALF)
+ * @returns {{x:number, y:number}[]} dva body [začiatok, koniec]
+ */
+export function segmentEnds(s, half = MATCH_HALF) {
+  const rad = (s.angle * Math.PI) / 180;
+  const dx = half * Math.cos(rad);
+  const dy = half * Math.sin(rad);
+  return [{ x: s.x - dx, y: s.y - dy }, { x: s.x + dx, y: s.y + dy }];
+}
+
+/**
  * Vzdialenosť bodu od úsečky zápalky (stred x, y, uhol, polovica dĺžky half).
  * Používa sa na „chytenie“ najbližšej zápalky prstom.
  * @param {{x:number, y:number}} p bod
@@ -75,7 +95,7 @@ export function findSnapSlot(pos, slots, occupied, opts = {}) {
  * @param {number} [half] polovica dĺžky (50)
  * @returns {number}
  */
-export function segmentDistance(p, m, half = 50) {
+export function segmentDistance(p, m, half = MATCH_HALF) {
   const rad = (m.angle * Math.PI) / 180;
   const ux = Math.cos(rad);
   const uy = Math.sin(rad);

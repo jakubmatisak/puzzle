@@ -67,7 +67,16 @@ export function decodeBoard(types, occupied) {
  */
 export function isTrueEquation(types, occupied) {
   const text = decodeBoard(types, occupied);
-  if (text === null) return false;
+  return text !== null && isTrueText(text, types);
+}
+
+/**
+ * Je už dekódovaný text pravdivá rovnica? Nikdy nevyhodí chybu.
+ * @param {string} text text z decodeBoard (medzera = prázdna bunka)
+ * @param {string[]} types typy buniek
+ * @returns {boolean}
+ */
+export function isTrueText(text, types) {
   const cells = [...text].map((ch, i) => ({ type: types[i], ch }));
   return evaluate(tokenize(cells));
 }

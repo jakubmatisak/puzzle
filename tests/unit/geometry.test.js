@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   normAngle, angleDiff, rotateStep, distance, findSnapSlot, segmentDistance,
+  segmentEnds, MATCH_HALF, SNAP_RADIUS, SNAP_MAX_ANGLE,
 } from '../../js/core/geometry.js';
 
 describe('normAngle', () => {
@@ -84,5 +85,21 @@ describe('segmentDistance', () => {
   });
   it('accepts a custom half length', () => {
     expect(segmentDistance({ x: 130, y: 50 }, horizontal, 20)).toBeCloseTo(10);
+  });
+});
+
+describe('spoločné konštanty a segmentEnds', () => {
+  it('exportuje rozmery zápalky a parametre priťahovania', () => {
+    expect(MATCH_HALF).toBe(50);
+    expect(SNAP_RADIUS).toBe(45);
+    expect(SNAP_MAX_ANGLE).toBe(23);
+  });
+  it('segmentEnds vráti oba konce úsečky dĺžky 100', () => {
+    const [p, q] = segmentEnds({ x: 10, y: 20, angle: 90 });
+    expect(p.x).toBeCloseTo(10);
+    expect(p.y).toBeCloseTo(-30);
+    expect(q.x).toBeCloseTo(10);
+    expect(q.y).toBeCloseTo(70);
+    expect(segmentEnds({ x: 0, y: 0, angle: 0 })).toEqual([{ x: -50, y: 0 }, { x: 50, y: 0 }]);
   });
 });
