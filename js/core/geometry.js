@@ -1,0 +1,68 @@
+/**
+ * Geometria hry: uhly (v stupňoch) a priťahovanie zápalky k voľnému slotu.
+ * Zápalka je symetrická, preto sa uhly počítajú modulo 180.
+ */
+
+/**
+ * Zníži uhol do intervalu 0 až 179.999 (modulo 180).
+ * @param {number} a uhol v stupňoch
+ * @returns {number}
+ */
+export function normAngle(a) {
+  return ((a % 180) + 180) % 180;
+}
+
+/**
+ * Najmenší rozdiel dvoch uhlov (modulo 180), vždy 0 až 90.
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ */
+export function angleDiff(a, b) {
+  const d = Math.abs(normAngle(a) - normAngle(b));
+  return Math.min(d, 180 - d);
+}
+
+/**
+ * Ďalší krok otočenia zápalky: 0 -> 45 -> 90 -> 135 -> 0.
+ * @param {number} a aktuálny uhol
+ * @returns {number}
+ */
+export function rotateStep(a) {
+  return ((Math.floor(normAngle(a) / 45) + 1) * 45) % 180;
+}
+
+/**
+ * Euklidovská vzdialenosť dvoch bodov {x, y}.
+ * @param {{x:number, y:number}} p
+ * @param {{x:number, y:number}} q
+ * @returns {number}
+ */
+export function distance(p, q) {
+  return Math.hypot(p.x - q.x, p.y - q.y);
+}
+
+/**
+ * Nájde najbližší voľný slot v polomere so zhodnou orientáciou.
+ * Pri rovnakej vzdialenosti vyhráva slot, ktorý je v poli skôr.
+ * @param {{x:number, y:number, angle:number}} pos pozícia pustenej zápalky
+ * @param {{id:string, x:number, y:number, angle:number}[]} slots všetky sloty
+ * @param {Set<string>} occupied id obsadených slotov
+ * @param {{radius?:number, maxAngle?:number}} [opts] polomer (45) a max. uhlový rozdiel (23)
+ * @returns {object|null} slot alebo null, ak nič nevyhovuje
+ */
+export function findSnapSlot(pos, slots, occupied, opts = {}) {
+  const { radius = 45, maxAngle = 23 } = opts;
+  let best = null;
+  let bestDist = Infinity;
+  for (const slot of slots) {
+    if (occupied.has(slot.id)) continue;
+    if (angleDiff(pos.angle, slot.angle) > maxAngle) continue;
+    const d = distance(pos, slot);
+    if (d <= radius && d < bestDist) {
+      best = slot;
+      bestDist = d;
+    }
+  }
+  return best;
+}
