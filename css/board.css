@@ -12,12 +12,16 @@
   box-shadow: inset 0 2px 14px rgb(0 0 0 / 45%), var(--shadow-md);
 }
 
+/* Iba samotné SVG blokuje posúvanie stránky prstom; zvyšok stránky sa posúva normálne. */
 .board {
+  display: block;
   width: 100%;
   height: auto;
   max-height: 70vh;
+  max-height: 70svh;
   touch-action: none;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Prvky, ktoré do dosky kreslí hra */
@@ -26,12 +30,14 @@
   stroke-width: 3;
   stroke-dasharray: 6 8;
   stroke-linecap: round;
+  transition: stroke 0.12s, stroke-width 0.12s;
 }
 
 .board .slot-target {
   stroke: var(--flame-2);
   stroke-dasharray: none;
-  stroke-width: 5;
+  stroke-width: 6;
+  filter: drop-shadow(0 0 6px var(--flame-1));
 }
 
 .board .tray {
@@ -41,19 +47,64 @@
   stroke-dasharray: 10 8;
 }
 
+.board .tray-label {
+  fill: rgb(255 240 210 / 45%);
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* Farby gradientov zápalky (svetlá hrana paličky a odlesk hlavičky) */
+.stop-stick-hi {
+  stop-color: #fbe3b4;
+}
+
+.stop-head-hi {
+  stop-color: #f2876d;
+}
+
 .board .match {
   cursor: grab;
+  outline: none;
   filter: drop-shadow(0 3px 2px rgb(0 0 0 / 45%));
 }
 
-.board .match:active {
-  cursor: grabbing;
+/* Neviditeľná, väčšia plocha na chytenie zápalky prstom */
+.board .match-hit {
+  fill: transparent;
 }
 
-.board .match:focus {
-  outline: none;
+.board .match-stick {
+  fill: url("#stick");
+  stroke: rgb(90 50 20 / 35%);
+  stroke-width: 0.8;
+}
+
+.board .match-head {
+  fill: url("#head");
+  stroke: rgb(60 10 5 / 50%);
+  stroke-width: 0.8;
+}
+
+.board .match-selected {
+  filter: drop-shadow(0 0 3px var(--flame-1)) drop-shadow(0 3px 2px rgb(0 0 0 / 45%));
 }
 
 .board .match:focus-visible {
-  filter: drop-shadow(0 0 4px var(--flame-1)) drop-shadow(0 0 2px var(--flame-2));
+  filter: drop-shadow(0 0 2px var(--flame-2)) drop-shadow(0 0 5px var(--flame-1));
+}
+
+/* Zdvihnutá zápalka: väčší a rozmazanejší tieň */
+.board .is-dragging {
+  cursor: grabbing;
+  filter: drop-shadow(5px 12px 5px rgb(0 0 0 / 55%)) drop-shadow(0 0 3px var(--flame-1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board .slot {
+    transition: none;
+  }
 }

@@ -1,12 +1,14 @@
 /**
- * Vstupný bod aplikácie: preklady, prepínanie jazyka, router a domovská obrazovka.
- * Herná logika (doska, ťahy, tlačidlá) pribudne v ďalších častiach.
+ * Vstupný bod aplikácie: preklady, prepínanie jazyka, router, domovská obrazovka
+ * a zatiaľ jednoduché otvorenie úlohy podľa ID (#/play/<kategória>?puzzle=<id>).
  */
 import { createStorage } from './core/storage.js';
 import { createI18n } from './core/i18n.js';
 import { createQueue } from './core/queue.js';
 import { loadPuzzles } from './core/puzzles.js';
+import { createState, movesUsed } from './core/puzzle-state.js';
 import { startRouter } from './ui/router.js';
+import { createBoard } from './ui/board.js';
 
 const VIEWS = ['home', 'play', 'help'];
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -19,6 +21,8 @@ let data = null;
 let loadFailed = false;
 let currentRoute = { view: 'home' };
 let firstRoute = true;
+let puzzle = null; // práve otvorená úloha
+let board = null;
 
 /** Rozloží zápis „attr:kľúč;attr2:kľúč2“ na dvojice [atribút, kľúč]. */
 function parseAttrSpec(spec) {
@@ -201,6 +205,46 @@ function renderPlayTitle() {
   title.textContent = category ? i18n.pick(category.name) : i18n.t('game.title');
 }
 
+/** Aktualizuje počítadlo ťahov „Ťahy: n / max“. */
+function renderMoves() {
+  const moves = document.getElementById('moves');
+  const params = { n: puzzle ? movesUsed(board.getState(), puzzle) : 0, max: puzzle ? puzzle.moves : '–' };
+  moves.dataset.i18nParams = JSON.stringify(params);
+  moves.textContent = i18n.t('game.moves', params);
+}
+
+/** Zobrazí text zadania úlohy (alebo „Načítavam úlohu…“). */
+function renderTask() {
+  const task = document.getElementById('task-text');
+  if (puzzle) {
+    delete task.dataset.i18n;
+    task.textContent = i18n.pick(puzzle.task);
+  } else {
+    task.dataset.i18n = 'game.loading';
+    task.textContent = i18n.t('game.loading');
+  }
+}
+
+/** Zobrazí hlášku pod doskou (prázdny kľúč = vymaže ju). */
+function showMessage(key) {
+  document.getElementById('message').textContent = key ? i18n.t(key) : '';
+}
+
+/** Otvorí úlohu podľa ID z trasy; neznáme ID vedie na domov. */
+function openPuzzle(route) {
+  if (!data || !route.puzzleId || puzzle?.id === route.puzzleId) return;
+  const found = data.puzzles.find((p) => p.id === route.puzzleId);
+  if (!found) {
+    window.location.hash = '#/';
+    return;
+  }
+  puzzle = found;
+  board.load(puzzle, createState(puzzle));
+  renderTask();
+  renderMoves();
+  showMessage('');
+}
+
 /** Zobrazí práve jednu obrazovku podľa trasy a označí aktívny odkaz v navigácii. */
 function showView(route) {
   currentRoute = route;
@@ -211,7 +255,10 @@ function showView(route) {
     if (link.dataset.nav === route.view) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
-  if (route.view === 'play') renderPlayTitle();
+  if (route.view === 'play') {
+    renderPlayTitle();
+    openPuzzle(route);
+  }
   if (!firstRoute) focusHeading(route.view);
   firstRoute = false;
 }
@@ -230,6 +277,10 @@ function toggleLanguage() {
   applyTranslations();
   renderHome();
   if (currentRoute.view === 'play') renderPlayTitle();
+  if (puzzle) {
+    renderTask();
+    board.setState(board.getState());
+  }
 }
 
 /** Spustí aplikáciu. */
@@ -239,6 +290,15 @@ async function init() {
   document.querySelectorAll('[data-action="print"]').forEach((btn) => {
     btn.addEventListener('click', () => window.print());
   });
+  board = createBoard(document.getElementById('board'), {
+    onChange: () => {
+      showMessage('');
+      renderMoves();
+    },
+    onHint: showMessage,
+    t: i18n.t,
+  });
+  document.querySelector('[data-action="rotate"]').addEventListener('click', () => board.rotateSelected());
   startRouter(showView);
   try {
     data = await loadPuzzles();
@@ -247,7 +307,10 @@ async function init() {
     console.error(error);
   }
   renderHome();
-  if (currentRoute.view === 'play') renderPlayTitle();
+  if (currentRoute.view === 'play') {
+    renderPlayTitle();
+    openPuzzle(currentRoute);
+  }
 }
 
 init();
