@@ -18,7 +18,7 @@ describe('buildBoard', () => {
     expect(board.tray.x).toBeCloseTo(board.bounds.x);
     expect(board.tray.y).toBeCloseTo(board.bounds.y + board.bounds.h);
     expect(board.tray.w).toBeCloseTo(board.bounds.w);
-    expect(board.tray.h).toBe(160);
+    expect(board.tray.h).toBe(130);
   });
   it('rešpektuje vlastný padding a trayHeight', () => {
     const b = buildBoard(gridSlots(1, 1), { padding: 10, trayHeight: 50 });
@@ -33,7 +33,7 @@ describe('trayPosition', () => {
     const p0 = trayPosition(board, 0);
     const p1 = trayPosition(board, 1);
     expect(p0.x).toBeCloseTo(board.tray.x + 20);
-    expect(p0.y).toBeCloseTo(board.tray.y + 80);
+    expect(p0.y).toBeCloseTo(board.tray.y + 65);
     expect(p1.x - p0.x).toBe(30);
     expect(p1.y).toBe(p0.y);
   });
@@ -41,6 +41,6 @@ describe('trayPosition', () => {
     const cols = Math.floor((board.tray.w - 40) / 30) + 1;
     const p = trayPosition(board, cols);
     expect(p.x).toBeCloseTo(board.tray.x + 20);
-    expect(p.y).toBeCloseTo(board.tray.y + 80 + 10);
+    expect(p.y).toBeCloseTo(board.tray.y + 65 + 10);
   });
 });

@@ -1,15 +1,29 @@
 /* Hracia plocha: tmavý „stôl“, na ktorom vyniknú zápalky. */
 
-/* Doska vyplní celú svoju oblasť mriežky; SVG v nej sa zmenší podľa šírky aj výšky. */
-.board-wrap {
+/* Oblasť dosky vyplní svoju bunku mriežky. Je to kontajner (jednotky cqw/cqh), aby sa rámik
+   dosky mohol prispôsobiť pomeru strán úlohy: zmestí sa do šírky aj výšky oblasti
+   a nikde nevznikne veľká prázdna tmavá plocha. Zvyšné miesto ostane okolo rámika. */
+.board-area {
+  --board-frame: 2px; /* hrúbka rámika; vnútorný okraj dávajú už súradnice úlohy (padding 60) */
+  --board-reserve: 0px; /* miesto pod rámikom (tip „otoč telefón“) */
+
   position: relative;
   display: flex;
   grid-area: board;
   flex-direction: column;
+  gap: var(--space-1);
+  align-items: center;
   min-width: 0;
   min-height: 0;
-  padding: clamp(var(--space-2), 2vw, var(--space-4));
-  border: 2px solid var(--frame);
+  container-type: size;
+}
+
+.board-wrap {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  border: var(--board-frame) solid var(--frame);
   border-radius: var(--radius-lg);
   background:
     radial-gradient(ellipse at 50% 0%, rgb(255 230 190 / 10%), transparent 65%),
@@ -18,12 +32,19 @@
   box-shadow: inset 0 2px 14px rgb(0 0 0 / 45%), var(--shadow-md);
 }
 
-/* Iba samotné SVG blokuje posúvanie stránky prstom; zvyšok stránky sa posúva normálne. */
+/* Šírka SVG = menšia z: celá šírka oblasti, alebo výška oblasti ÷ pomer (výška/šírka) úlohy.
+   --board-ratio nastavuje board.js podľa viewBoxu. Iba samotné SVG blokuje posúvanie
+   stránky prstom; zvyšok stránky sa posúva normálne. */
 .board {
+  --board-edge: calc(2 * var(--board-frame));
+  --board-w: min(
+    100cqw - var(--board-edge),
+    (100cqh - var(--board-edge) - var(--board-reserve)) / var(--board-ratio, 0.6)
+  );
+
   display: block;
-  flex: 1 1 0;
-  width: 100%;
-  min-height: 0;
+  width: var(--board-w);
+  height: calc(var(--board-w) * var(--board-ratio, 0.6));
   touch-action: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent; /* jediné vendor rozšírenie: bez neho Chrome na mobile bliká pri ťuknutí */
@@ -103,7 +124,8 @@
   filter: drop-shadow(5px 12px 5px rgb(0 0 0 / 55%)) drop-shadow(0 0 3px var(--flame-1));
 }
 
-/* Tip „otoč telefón na šírku“: iba úzky displej na výšku (a len pre široké úlohy) */
+/* Tip „otoč telefón na šírku“: iba úzky displej na výšku (a len pre široké úlohy).
+   Leží pod rámikom dosky ako jeden riadok, nič na doske nezakrýva. */
 .rotate-tip {
   display: none;
 }
@@ -122,28 +144,40 @@
 }
 
 .rotate-tip-close:focus-visible {
-  outline: 2px solid var(--flame-1);
+  outline: 2px solid var(--focus);
 }
 
-/* Na telefóne doska využije takmer celú šírku */
+/* Na telefóne menšie zaoblenie rámika */
 @media (width <= 600px) {
   .board-wrap {
-    padding: 2px;
     border-radius: var(--radius);
   }
 }
 
+/* Na výšku: rámik dosky (a tip) v strede oblasti, voľné miesto rovnako hore aj dole */
+@media (orientation: portrait) {
+  .board-area {
+    justify-content: center;
+  }
+}
+
 @media (width < 600px) and (orientation: portrait) {
+  .board-area:has(> .rotate-tip:not([hidden])) {
+    --board-reserve: calc(var(--tap) + var(--space-1));
+  }
+
   .rotate-tip:not([hidden]) {
     display: flex;
     flex: none;
     gap: var(--space-2);
     align-items: center;
     justify-content: space-between;
+    width: 100%;
     margin: 0;
     padding: 0 0 0 var(--space-3);
-    color: rgb(255 240 210 / 80%);
+    color: var(--ink-soft);
     font-size: var(--step-minus-1);
+    line-height: 1.3;
   }
 }
 
@@ -161,7 +195,6 @@
   align-items: flex-end;
   justify-content: center;
   padding: var(--space-3);
-  overflow: hidden;
   border-radius: inherit;
   pointer-events: none;
 }
@@ -204,9 +237,12 @@
   font-size: var(--step-1);
 }
 
+/* Iskry padajú iba v rámiku dosky; karta môže na nízkej doske presahovať nahor */
 .sparks {
   position: absolute;
   inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
 }
 
 /* Iskra = stĺpec výšky dosky s hlavičkou na spodku; posun o -100 % → 0 ju „zhodí“ zhora nadol. */

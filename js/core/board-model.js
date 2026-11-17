@@ -27,10 +27,10 @@ function segmentExtent(slots) {
 /**
  * Zostaví dosku: sloty, vyhľadávanie podľa id, hranice a odkladaciu plochu.
  * @param {{id:string,x:number,y:number,angle:number}[]} slots
- * @param {{padding?:number, trayHeight?:number}} [opts] okraj (60) a výška odkladacej plochy (160)
+ * @param {{padding?:number, trayHeight?:number}} [opts] okraj (60) a výška odkladacej plochy (130 – zvislá zápalka sa zmestí, doska je nižšia)
  * @returns {{slots:object[], slotById:Map<string,object>, bounds:object, tray:object}}
  */
-export function buildBoard(slots, { padding = 60, trayHeight = 160 } = {}) {
+export function buildBoard(slots, { padding = 60, trayHeight = 130 } = {}) {
   const e = segmentExtent(slots);
   const bounds = {
     x: e.minX - padding,

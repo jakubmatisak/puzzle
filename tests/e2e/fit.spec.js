@@ -33,7 +33,7 @@ function measure(page) {
     const rect = (el) => {
       if (!el || el.getClientRects().length === 0) return null;
       const r = el.getBoundingClientRect();
-      return { top: r.top, left: r.left, bottom: r.bottom, right: r.right, height: r.height };
+      return { top: r.top, left: r.left, bottom: r.bottom, right: r.right, height: r.height, width: r.width };
     };
     const visible = [...document.querySelectorAll(
       '#view-play .play-head, #controls > .btn, #message, #rotate-tip, #rec-indicator, #recording, .success-card',
@@ -44,6 +44,8 @@ function measure(page) {
       ih: window.innerHeight,
       iw: window.innerWidth,
       wrap: rect(document.querySelector('.board-wrap')),
+      play: rect(document.querySelector('.play')),
+      viewBox: (({ width, height }) => ({ width, height }))(document.getElementById('board').viewBox.baseVal),
       visible,
     };
   });
@@ -70,13 +72,24 @@ test.describe('play view fits one viewport', () => {
     test.describe(`${width}x${height}`, () => {
       test.use(contextFor(width, height));
 
-      test('every puzzle fits without scrolling', async ({ page }) => {
+      test('every puzzle fits without scrolling and the board box hugs the puzzle', async ({ page }) => {
         const portraitPhone = width < 600 && height > width;
         for (const [i, puzzle] of DATA.puzzles.entries()) {
           await openPuzzle(page, puzzle, i === 0);
-          const m = await expectFits(page, `${width}x${height} ${puzzle.id}`);
+          const tag = `${width}x${height} ${puzzle.id}`;
+          const m = await expectFits(page, tag);
+          // Rámik dosky má pomer strán ako viewBox (± 10 %) – žiadne veľké prázdne plochy
+          const boxRatio = m.wrap.height / m.wrap.width;
+          const vbRatio = m.viewBox.height / m.viewBox.width;
+          expect(Math.abs(boxRatio / vbRatio - 1), `${tag}: board box ratio ${boxRatio.toFixed(2)} vs viewBox ${vbRatio.toFixed(2)}`)
+            .toBeLessThanOrEqual(0.1);
+          // Telefón na výšku: doska je čo najväčšia – ≥ 90 % šírky obsahu
+          // (vysoké úlohy, ktoré narazia na výšku, aspoň ≥ 35 % výšky okna)
           if (portraitPhone) {
-            expect(m.wrap.height, `${puzzle.id}: board height`).toBeGreaterThanOrEqual(0.35 * height);
+            const wide = m.wrap.width >= 0.9 * m.play.width;
+            const tall = m.wrap.height >= 0.35 * height;
+            expect(wide || tall, `${tag}: board ${Math.round(m.wrap.width)}x${Math.round(m.wrap.height)} of ${Math.round(m.play.width)}`).toBe(true);
+            if (vbRatio < 1) expect(wide, `${tag}: wide puzzle uses ≥ 90 % width`).toBe(true);
           }
         }
       });

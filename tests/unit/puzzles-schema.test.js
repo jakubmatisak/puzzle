@@ -25,7 +25,7 @@ describe('normalizePuzzles', () => {
     expect(p.types).toEqual(['digit', 'op', 'digit', 'rel', 'digit']);
     expect(p.start.has('c0.a')).toBe(true);
     expect(p.solutionTexts).toEqual(['5+4=9']);
-    expect(p.board.tray.h).toBe(160);
+    expect(p.board.tray.h).toBe(130);
   });
 
   it('start "all" = všetky sloty mriežky a without odoberá sloty', () => {

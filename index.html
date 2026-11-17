@@ -164,31 +164,34 @@
           <p id="task-text" class="task-text" data-i18n="game.loading">Načítavam úlohu…</p>
           <p id="moves" class="moves" data-i18n="game.moves" data-i18n-params='{"n":0,"max":"–"}'>Ťahy: 0 / –</p>
         </div>
-        <div class="board-wrap">
-          <svg id="board" class="board" role="application" viewBox="0 0 600 360" data-i18n-attr="aria-label:game.board" aria-label="Hracia plocha so zápalkami"></svg>
+        <!-- Oblasť dosky: rámik dosky má pomer strán úlohy, tip je pod ním -->
+        <div class="board-area">
+          <div class="board-wrap">
+            <svg id="board" class="board" role="application" viewBox="0 0 600 360" data-i18n-attr="aria-label:game.board" aria-label="Hracia plocha so zápalkami"></svg>
+            <!-- Oslava po vyriešení: padajúce iskry a karta s tlačidlom na ďalšiu úlohu -->
+            <div id="success" class="success" hidden>
+              <div class="sparks" aria-hidden="true">
+                <span class="spark"></span><span class="spark"></span><span class="spark"></span>
+                <span class="spark"></span><span class="spark"></span><span class="spark"></span>
+                <span class="spark"></span><span class="spark"></span><span class="spark"></span>
+              </div>
+              <div class="success-card">
+                <svg class="icon success-icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg>
+                <p class="success-text">
+                  <strong class="success-title" data-i18n="game.solvedTitle">Výborne!</strong>
+                  <span data-i18n="game.solvedText">Úloha je vyriešená.</span>
+                </p>
+                <button type="button" class="btn btn-primary success-next" data-action="next">
+                  <span data-i18n="game.next">Ďalšia úloha</span>
+                  <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-next"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
           <p id="rotate-tip" class="rotate-tip" hidden>
             <span data-i18n="board.rotateTip">Tip: otoč telefón na šírku – zápalky budú väčšie.</span>
             <button type="button" class="rotate-tip-close" data-i18n-attr="aria-label:board.closeTip" aria-label="Zavrieť tip"><span aria-hidden="true">×</span></button>
           </p>
-          <!-- Oslava po vyriešení: padajúce iskry a karta s tlačidlom na ďalšiu úlohu -->
-          <div id="success" class="success" hidden>
-            <div class="sparks" aria-hidden="true">
-              <span class="spark"></span><span class="spark"></span><span class="spark"></span>
-              <span class="spark"></span><span class="spark"></span><span class="spark"></span>
-              <span class="spark"></span><span class="spark"></span><span class="spark"></span>
-            </div>
-            <div class="success-card">
-              <svg class="icon success-icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg>
-              <p class="success-text">
-                <strong class="success-title" data-i18n="game.solvedTitle">Výborne!</strong>
-                <span data-i18n="game.solvedText">Úloha je vyriešená.</span>
-              </p>
-              <button type="button" class="btn btn-primary success-next" data-action="next">
-                <span data-i18n="game.next">Ďalšia úloha</span>
-                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-next"/></svg>
-              </button>
-            </div>
-          </div>
         </div>
         <p id="message" class="message" aria-live="polite"></p>
         <div class="rec-area">

@@ -136,6 +136,8 @@ export function createBoard(svg, { onChange = () => {}, onHint = () => {}, t = (
     const { bounds, tray } = board;
     svg.setAttribute('viewBox', [bounds.x, bounds.y, bounds.w, bounds.h + tray.h].map(round).join(' '));
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    // Pomer výška/šírka pre CSS: rámik dosky sa podľa neho prispôsobí úlohe (board.css)
+    svg.style.setProperty('--board-ratio', round((bounds.h + tray.h) / bounds.w));
   }
 
   /** Nakreslí celú dosku nanovo (pri načítaní úlohy). */
