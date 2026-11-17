@@ -2,7 +2,7 @@
  * Service worker Zápalkovo: pri inštalácii uloží celú aplikáciu do cache,
  * potom odpovedá "najprv sieť, potom cache" – online je všetko čerstvé, offline hra funguje.
  */
-const CACHE = 'zapalkovo-v1';
+const CACHE = 'zapalkovo-v2';
 const CACHE_PREFIX = 'zapalkovo-';
 const NETWORK_TIMEOUT_MS = 4000;
 
@@ -81,12 +81,16 @@ async function updateCache(request, response) {
   return response;
 }
 
-/** Sieťová požiadavka, ktorá sa po NETWORK_TIMEOUT_MS preruší (pomalé pripojenie → cache). */
+/**
+ * Sieťová požiadavka, ktorá sa po NETWORK_TIMEOUT_MS preruší (pomalé pripojenie → cache).
+ * cache: 'no-cache' = vždy sa overí na serveri (ETag/304), takže nová verzia
+ * po nasadení je viditeľná hneď a nečaká na HTTP cache prehliadača.
+ */
 async function fetchWithTimeout(request) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS);
   try {
-    return await fetch(request, { signal: controller.signal });
+    return await fetch(request, { signal: controller.signal, cache: 'no-cache' });
   } finally {
     clearTimeout(timer);
   }

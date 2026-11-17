@@ -57,7 +57,11 @@ describe('service worker APP_SHELL', () => {
     manifest.icons.forEach((icon) => expect(shell).toContain(`./${icon.src.replace(/^\.\//, '')}`));
   });
 
-  it('uses the zapalkovo-v1 cache name', () => {
-    expect(swText).toMatch(/CACHE\s*=\s*'zapalkovo-v1'/);
+  it('uses the zapalkovo-v2 cache name', () => {
+    expect(swText).toMatch(/CACHE\s*=\s*'zapalkovo-v2'/);
+  });
+
+  it('revalidates with the server instead of the HTTP cache (fresh deploys)', () => {
+    expect(swText).toMatch(/cache:\s*'no-cache'/);
   });
 });
