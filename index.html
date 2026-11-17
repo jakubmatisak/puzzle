@@ -185,6 +185,20 @@
           </div>
         </div>
         <p id="message" class="message" aria-live="polite"></p>
+        <div class="rec-area">
+          <p id="rec-indicator" class="rec-indicator" aria-live="off" hidden><span class="rec-dot" aria-hidden="true">●</span> <span id="rec-time">REC 00:00</span></p>
+          <p id="record-note" class="record-note" data-i18n="record.unsupported" hidden>Tento prehliadač nepodporuje nahrávanie videa.</p>
+          <section id="recording" class="recording" aria-labelledby="rec-download" hidden>
+            <div class="recording-video"></div>
+            <div class="recording-actions">
+              <a id="rec-download" class="btn btn-primary">
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-video"/></svg>
+                <span data-i18n="game.download">Stiahnuť video</span>
+              </a>
+              <button type="button" id="rec-close" class="rec-close" data-i18n-attr="aria-label:record.close" aria-label="Zavrieť video"><span aria-hidden="true">×</span></button>
+            </div>
+          </section>
+        </div>
         <div id="controls" class="controls" role="group" data-i18n-attr="aria-label:game.controls" aria-label="Ovládanie hry">
           <button type="button" class="btn btn-tool" data-action="hint">
             <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-hint"/></svg>

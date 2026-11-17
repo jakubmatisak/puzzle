@@ -11,6 +11,7 @@ import { createBoard } from './ui/board.js';
 import { createGame } from './ui/game.js';
 import { renderHome } from './ui/home.js';
 import { initSensors } from './ui/sensors.js';
+import { createRecordingUi } from './ui/recording-ui.js';
 
 const VIEWS = ['home', 'play', 'help'];
 
@@ -24,6 +25,7 @@ let currentRoute = { view: 'home' };
 let firstRoute = true;
 let board = null;
 let game = null; // vznikne po načítaní úloh
+let recording = null; // ovládanie nahrávania videa
 
 /** Rozloží zápis „attr:kľúč;attr2:kľúč2“ na dvojice [atribút, kľúč]. */
 function parseAttrSpec(spec) {
@@ -81,6 +83,7 @@ function showView(route) {
     if (link.dataset.nav === route.view) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
+  if (route.view !== 'play') recording?.stop(); // opustenie hry ukončí nahrávanie
   if (route.view === 'home') showHome();
   if (route.view === 'play') showPlay(route);
   if (!firstRoute) focusHeading(route.view);
@@ -128,6 +131,7 @@ async function init() {
     });
   }
   if (game) {
+    recording = createRecordingUi({ root: document.getElementById('view-play'), game, i18n });
     initSensors({
       onTiltLeft: () => game.showSolution(),
       onDoubleShake: () => game.reset(),

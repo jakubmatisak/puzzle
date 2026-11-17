@@ -27,13 +27,14 @@ export function nextDistinct(queue, categoryId, ids, currentId) {
 
 /**
  * Vytvorí ovládač hry nad obrazovkou #view-play.
- * Po vyriešení vyšle na `root` udalosť `solved` (detail: {puzzle}).
+ * Po vyriešení vyšle na `root` udalosť `solved` (detail: {puzzle}),
+ * po načítaní inej úlohy udalosť `puzzlechange` (detail: {puzzle}).
  * @param {{root:HTMLElement, board:object, queue:object, i18n:object,
  *   puzzles:{categories:object[], puzzles:object[]}, storage?:{get:Function, set:Function}}} opts
  *   root = obrazovka hry, board = API z createBoard, queue = fronta úloh,
  *   puzzles = normalizované úlohy, storage = úložisko (pre zavretý tip „otoč telefón“)
  * @returns {object} API hry (open, showHint, showSolution, nextSolution, reset, next,
- *   getCurrent, relabel, onBoardChange, onBoardHint)
+ *   getCurrent, getScene, relabel, onBoardChange, onBoardHint)
  */
 export function createGame({ root, board, queue, i18n, puzzles, storage = null }) {
   const $ = (selector) => root.querySelector(selector);
@@ -168,6 +169,7 @@ export function createGame({ root, board, queue, i18n, puzzles, storage = null }
   function load(next) {
     token += 1;
     puzzle = next;
+    root.dispatchEvent(new CustomEvent('puzzlechange', { detail: { puzzle: next } }));
     message = null;
     revealed = false;
     solved = false;
@@ -292,6 +294,20 @@ export function createGame({ root, board, queue, i18n, puzzles, storage = null }
     setMessage({ key });
   }
 
+  /** Aktuálna scéna pre nahrávanie videa (drawScene v canvas-renderer.js). */
+  function getScene() {
+    if (!puzzle) return null;
+    return {
+      board: puzzle.board,
+      matches: board.getState().matches,
+      drag: board.getDragInfo(),
+      solved,
+      title: i18n.pick(puzzle.task),
+      solvedText: i18n.t('record.solved'),
+      trayLabel: i18n.t('board.tray'),
+    };
+  }
+
   // Tlačidlá ovládania
   const actions = {
     hint: showHint,
@@ -326,6 +342,8 @@ export function createGame({ root, board, queue, i18n, puzzles, storage = null }
     next,
     /** Práve otvorená úloha (alebo null). */
     getCurrent: () => puzzle,
+    /** Scéna pre kreslenie videa (null bez úlohy): doska, zápalky, ťahaná zápalka, popisy. */
+    getScene,
     relabel,
     onBoardChange,
     onBoardHint,

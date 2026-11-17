@@ -494,8 +494,20 @@
     "head"
     "board"
     "message"
+    "rec"
     "controls";
   gap: var(--space-4);
+}
+
+.rec-area {
+  display: grid;
+  grid-area: rec;
+  gap: var(--space-3);
+  justify-items: start;
+}
+
+.rec-area:not(:has(> :not([hidden]))) {
+  display: none;
 }
 
 .play-head {
@@ -676,7 +688,8 @@
     grid-template:
       "head head" auto
       "board message" auto
-      "board controls" 1fr / minmax(0, 1fr) 17rem;
+      "board controls" 1fr
+      "rec rec" auto / minmax(0, 1fr) 17rem;
     gap: var(--space-4) var(--space-5);
   }
 
@@ -901,4 +914,89 @@ html[lang="en"] .help[lang="sk"] {
   max-width: var(--container);
   margin: 0 auto;
   padding: var(--space-4) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom));
+}
+
+/* ---------- Nahrávanie videa ---------- */
+.rec-indicator {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin: 0;
+  color: var(--head-1);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.rec-dot {
+  animation: rec-pulse 1s ease-in-out infinite;
+}
+
+.btn-record.is-recording {
+  border-color: var(--head-1);
+  background: var(--head-1);
+  color: #fff;
+}
+
+.btn-record.is-recording .icon {
+  color: #fff;
+}
+
+.record-note {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: var(--step-minus-1);
+}
+
+.recording {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 34rem;
+  padding: var(--space-3);
+  border: 2px solid var(--frame);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.recording-video video {
+  display: block;
+  width: 100%;
+  max-height: 50vh;
+  border-radius: var(--radius-sm);
+  background: #000;
+}
+
+.recording-actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rec-close {
+  min-width: var(--tap);
+  min-height: var(--tap);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rec-close:focus-visible {
+  outline: 2px solid var(--focus);
+}
+
+@keyframes rec-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rec-dot {
+    animation: none;
+  }
 }
