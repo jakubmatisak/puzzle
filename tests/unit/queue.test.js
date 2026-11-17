@@ -44,7 +44,36 @@ describe('createStorage', () => {
   });
 });
 
+describe('createStorage - ochrana prístupu', () => {
+  it('window.localStorage getter hádže → createStorage() nehodí a ide cez RAM', () => {
+    const had = Object.getOwnPropertyDescriptor(globalThis, 'window');
+    globalThis.window = {};
+    Object.defineProperty(globalThis.window, 'localStorage', {
+      get() { throw new Error('SecurityError'); },
+    });
+    try {
+      let s;
+      expect(() => { s = createStorage(); }).not.toThrow();
+      s.set('k', 1);
+      expect(s.get('k', 0)).toBe(1);
+    } finally {
+      if (had) Object.defineProperty(globalThis, 'window', had);
+      else delete globalThis.window;
+    }
+  });
+  it('JSON null vráti fallback', () => {
+    const b = fakeBackend();
+    b.setItem('k', 'null');
+    expect(createStorage(b).get('k', 'fb')).toBe('fb');
+  });
+});
+
 describe('createQueue', () => {
+  it('next s prázdnym allIds vráti null a nič nezapíše', () => {
+    const b = fakeBackend();
+    expect(createQueue(createStorage(b)).next('cat', [])).toBeNull();
+    expect(b.m.size).toBe(0);
+  });
   it('5× next = permutácia bez opakovania', () => {
     const q = createQueue(createStorage(fakeBackend()));
     const got = IDS.map(() => q.next('cat', IDS));

@@ -26,10 +26,11 @@ export function createQueue(storage, rng = Math.random) {
   }
 
   /**
-   * Vyberie ďalšiu úlohu: náhodne z ešte neodohraných. Keď sú odohrané všetky,
+   * Vyberie ďalšiu úlohu: náhodne z ešte neodohraných (null, ak nie sú žiadne úlohy). Keď sú odohrané všetky,
    * história sa vyčistí a vyberie sa z ostatných (okrem poslednej, ak ich je viac).
    */
   function next(categoryId, allIds) {
+    if (allIds.length === 0) return null;
     let played = playedIn(categoryId, allIds);
     let pool = allIds.filter((id) => !played.includes(id));
     if (pool.length === 0) {
