@@ -73,39 +73,65 @@ export function createTiltDetector({ threshold = -35, release = -15, holdMs = 30
 }
 
 /**
- * Detektor dvojitého otrasu: dva vrcholy (prechod nad prah) v okne `window`,
- * každý aspoň minGap po predchádzajúcom; po spustení prebehne cooldown.
- * @param {{threshold?: number, minGap?: number, window?: number, cooldown?: number}} [options]
+ * Detektor dvojitého otrasu. Jeden fyzický otras kmitá (zrýchlenie mení znamienko),
+ * preto sa nepočítajú jednotlivé prekročenia prahu, ale celé dávky:
+ * dávka začne, keď magnitúda > threshold, a skončí, keď je magnitúda
+ * aspoň quietMs nepretržite pod rearm. Spustí sa na začiatku 2. dávky,
+ * ak začala najneskôr windowMs po začiatku predchádzajúcej; potom cooldown.
+ * @param {{threshold?: number, rearm?: number, quietMs?: number, windowMs?: number, cooldown?: number}} [options]
  * @returns {{update: (magnitude: number, t: number) => boolean}}
  */
 export function createShakeDetector({
   threshold = 15,
-  minGap = 150,
-  window = 1000,
+  rearm = 7.5,
+  quietMs = 150,
+  windowMs = 1200,
   cooldown = 1500,
 } = {}) {
-  let wasAbove = false;
-  let lastPeak = null;
+  let inBurst = false;
+  let quietStart = null;
+  let lastBurstStart = null;
   let cooldownUntil = -Infinity;
+
+  /** Sleduje koniec dávky (ticho pod rearm). */
+  function trackQuiet(magnitude, t) {
+    if (magnitude >= rearm) {
+      quietStart = null;
+      return;
+    }
+    if (quietStart === null) quietStart = t;
+    if (t - quietStart >= quietMs) {
+      inBurst = false;
+      quietStart = null;
+    }
+  }
+
+  /** Spracuje začiatok novej dávky; true ak ide o druhú dávku v okne. */
+  function startBurst(t) {
+    inBurst = true;
+    quietStart = null;
+    if (t < cooldownUntil) return false;
+    if (lastBurstStart !== null && t - lastBurstStart <= windowMs) {
+      lastBurstStart = null;
+      cooldownUntil = t + cooldown;
+      return true;
+    }
+    lastBurstStart = t;
+    return false;
+  }
 
   return {
     /**
      * @param {number} magnitude veľkosť zrýchlenia (m/s²)
      * @param {number} t čas v ms
-     * @returns {boolean} true pri druhom vrchole v okne
+     * @returns {boolean} true na začiatku druhej dávky v okne
      */
     update(magnitude, t) {
-      const above = magnitude > threshold;
-      const isPeak = above && !wasAbove;
-      wasAbove = above;
-      if (!isPeak || t < cooldownUntil) return false;
-      if (lastPeak !== null && t - lastPeak < minGap) return false;
-      if (lastPeak !== null && t - lastPeak <= window) {
-        lastPeak = null;
-        cooldownUntil = t + cooldown;
-        return true;
+      if (inBurst) {
+        trackQuiet(magnitude, t);
+        return false;
       }
-      lastPeak = t;
+      if (magnitude > threshold) return startBurst(t);
       return false;
     },
   };

@@ -56,50 +56,72 @@ describe('createTiltDetector', () => {
   });
 });
 
-describe('createShakeDetector', () => {
-  it('dva vrcholy v okne spustia', () => {
+describe('createShakeDetector (dávky)', () => {
+  // Oscilujúci otras: striedanie 20/0 po 50 ms od t0 do t1 (vrátane).
+  function shake(d, t0, t1) {
+    let r = false;
+    for (let t = t0, i = 0; t <= t1; t += 50, i++) {
+      if (d.update(i % 2 === 0 ? 20 : 0, t)) r = true;
+    }
+    return r;
+  }
+  function quiet(d, t0, t1) {
+    let r = false;
+    for (let t = t0; t <= t1; t += 50) if (d.update(0, t)) r = true;
+    return r;
+  }
+
+  it('(a) jeden fyzický otras (oscilácia) nespustí', () => {
     const d = createShakeDetector();
-    expect(d.update(20, 0)).toBe(false);
+    expect(shake(d, 0, 400)).toBe(false);
+    expect(quiet(d, 450, 2000)).toBe(false);
+  });
+  it('(b) dva otrasy s pokojom medzi nimi spustia na začiatku druhého', () => {
+    const d = createShakeDetector();
+    expect(shake(d, 0, 200)).toBe(false);
+    expect(quiet(d, 250, 450)).toBe(false);
+    expect(d.update(20, 500)).toBe(true);
+  });
+  it('(c) dávky 1300 ms od seba nespustia', () => {
+    const d = createShakeDetector();
+    d.update(20, 0);
+    quiet(d, 50, 1250);
+    expect(d.update(20, 1300)).toBe(false);
+  });
+  it('(d) hodnoty medzi rearm a threshold dávku neukončia', () => {
+    const d = createShakeDetector();
+    d.update(20, 0);
+    for (let t = 50; t <= 600; t += 50) d.update(10, t);
+    expect(d.update(20, 700)).toBe(false);
+    quiet(d, 750, 1000);
+    // 700 nebol začiatok dávky, takže prvá dávka ostala jediná
+    expect(d.update(20, 1100)).toBe(true); // druhá dávka, 1100 od začiatku prvej
+  });
+  it('(e) cooldown: nová dvojica do 1500 ms nespustí, po ňom áno', () => {
+    const d = createShakeDetector();
+    d.update(20, 0);
+    quiet(d, 50, 450);
+    expect(d.update(20, 500)).toBe(true);
+    quiet(d, 550, 650);
+    expect(d.update(20, 700)).toBe(false); // ignorovaná dávka
+    quiet(d, 750, 900);
+    expect(d.update(20, 1000)).toBe(false); // ignorovaná dávka
+    quiet(d, 1050, 2050);
+    expect(d.update(20, 2100)).toBe(false); // prvá nová dávka
+    quiet(d, 2150, 2450);
+    expect(d.update(20, 2500)).toBe(true);
+  });
+  it('(f) presné hranice: quietMs ukončí dávku, window ešte spustí', () => {
+    const d = createShakeDetector();
+    d.update(20, 0);
     d.update(0, 100);
-    expect(d.update(20, 400)).toBe(true);
-  });
-  it('vrcholy ďaleko od seba (1200 ms) nespustia', () => {
-    const d = createShakeDetector();
-    d.update(20, 0);
-    d.update(0, 600);
-    expect(d.update(20, 1200)).toBe(false);
-  });
-  it('vrchol bližšie ako minGap sa nepočíta', () => {
-    const d = createShakeDetector();
-    d.update(20, 0);
-    d.update(0, 50);
-    expect(d.update(20, 100)).toBe(false);
-  });
-  it('trvalé vysoké hodnoty sú jeden vrchol', () => {
-    const d = createShakeDetector();
-    for (let t = 0; t < 1000; t += 50) expect(d.update(20, t)).toBe(false);
-  });
-  it('po spustení sa vrcholy počas cooldownu ignorujú', () => {
-    const d = createShakeDetector();
-    d.update(20, 0);
-    d.update(0, 100);
-    expect(d.update(20, 400)).toBe(true);
-    d.update(0, 500);
-    expect(d.update(20, 600)).toBe(false);
-    d.update(0, 700);
-    expect(d.update(20, 800)).toBe(false);
-    d.update(0, 900);
-    expect(d.update(20, 1000)).toBe(false);
-  });
-  it('po cooldowne funguje znova', () => {
-    const d = createShakeDetector();
-    d.update(20, 0);
-    d.update(0, 100);
-    d.update(20, 400);
-    d.update(0, 500);
-    expect(d.update(20, 2000)).toBe(false); // prvý vrchol nového páru
-    d.update(0, 2100);
-    expect(d.update(20, 2400)).toBe(true);
+    d.update(0, 250); // presne 150 ms ticha -> dávka skončila
+    expect(d.update(20, 1200)).toBe(true); // presne window po začiatku
+    const e = createShakeDetector();
+    e.update(20, 0);
+    e.update(0, 100);
+    e.update(0, 249); // 149 ms -> dávka trvá
+    expect(e.update(20, 300)).toBe(false);
   });
 });
 
