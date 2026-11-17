@@ -1,0 +1,135 @@
+/* Tlač: iba návod, čierny text na bielom papieri. */
+@media print {
+  @page {
+    margin: 15mm;
+  }
+
+  :root {
+    --ink: #000;
+    --ink-soft: #222;
+    --accent: #000;
+    --accent-strong: #000;
+    --surface: #fff;
+    --paper: #fff;
+    --line: #999;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 11pt;
+    line-height: 1.45;
+  }
+
+  header nav,
+  .skip-link,
+  .lang-toggle,
+  button,
+  .btn,
+  #view-home,
+  #view-play,
+  .site-footer {
+    display: none !important;
+  }
+
+  /* Návod sa vytlačí aj vtedy, keď je práve otvorená iná obrazovka. */
+  #view-help,
+  #view-help[hidden] {
+    display: block !important;
+  }
+
+  .site-header {
+    box-shadow: none;
+    border-bottom: 1pt solid #000;
+  }
+
+  .site-header::after {
+    display: none;
+  }
+
+  .brand-tagline {
+    display: inline;
+    color: #000;
+  }
+
+  .site-main {
+    max-width: none;
+    padding: 6mm 0 0;
+  }
+
+  .help {
+    max-width: none;
+    gap: 4mm;
+  }
+
+  .help-header {
+    padding-bottom: 3mm;
+    border-bottom: 1pt solid #000;
+  }
+
+  .help-title {
+    font-size: 22pt;
+  }
+
+  .help-lead,
+  .help-list dd {
+    color: #000;
+  }
+
+  .help-section,
+  .help-mobile {
+    padding: 3mm 0;
+    border: 0;
+    border-top: 0.5pt solid #999;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  .help-mobile {
+    padding: 3mm;
+    border: 1.5pt dashed #000;
+  }
+
+  .help-section h2 {
+    font-size: 14pt;
+    break-after: avoid;
+  }
+
+  .gesture-list li .icon,
+  .help-section h2 .icon,
+  .eyebrow {
+    color: #000;
+    background: none;
+  }
+
+  .badge {
+    border: 1pt solid #000;
+    background: none;
+    color: #000;
+  }
+
+  .gesture-list li {
+    background: none;
+    padding: 1mm 0;
+  }
+
+  .check-list li::before {
+    color: #000;
+  }
+
+  kbd {
+    background: none;
+    border-color: #000;
+  }
+
+  a {
+    color: #000;
+  }
+
+  a[href]:not([href^="#"])::after {
+    content: " (" attr(href) ")";
+    font-size: 0.9em;
+  }
+}
