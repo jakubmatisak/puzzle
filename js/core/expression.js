@@ -39,7 +39,9 @@ export function tokenize(cells) {
   for (const { type, ch } of cells) {
     if (ch === ' ') continue;
     if (type === 'digit' || type === 'roman') {
-      if (type !== runType && !flush()) return null;
+      if (type !== runType) {
+        if (!flush()) return null;
+      }
       runType = type;
       runText += ch;
     } else if (

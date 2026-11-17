@@ -24,6 +24,20 @@ describe('evaluate', () => {
   });
 });
 
+describe('regressions', () => {
+  it('subtraction is left-associative', () => {
+    expect(evaluate([9, '-', 5, '-', 1, '=', 3])).toBe(true);
+  });
+  it('multiplication binds before subtraction', () => {
+    expect(evaluate([2, '×', 3, '-', 1, '=', 5])).toBe(true);
+  });
+  it('digit run followed by roman run gives two numbers and is invalid', () => {
+    const t = tokenize([{ type: 'digit', ch: '1' }, { type: 'roman', ch: 'I' }]);
+    expect(t).toEqual([1, 1]);
+    expect(evaluate(t)).toBe(false);
+  });
+});
+
 describe('tokenize', () => {
   it('digits', () => {
     expect(tokenize(cells('digit', '06'))).toBeNull();
