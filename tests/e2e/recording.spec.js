@@ -58,6 +58,8 @@ test.describe('video recording', () => {
     const link = page.locator('#rec-download');
     await expect(page.locator('#recording')).toBeVisible();
     await expect(page.locator('#recording video')).toHaveCount(1);
+    await expect(link).toBeFocused();
+    await expect(record).not.toHaveAttribute('aria-pressed', /.*/);
     await expect(link).toHaveAttribute('href', /^blob:/);
     await expect(link).toHaveAttribute('download', `zapalkovo-${PUZZLE}.webm`);
     const href = await link.getAttribute('href');
@@ -66,6 +68,40 @@ test.describe('video recording', () => {
 
     await page.locator('#rec-close').click();
     await expect(page.locator('#recording')).toBeHidden();
+  });
+
+  test('reset and solution do not stop a running recording', async ({ page }) => {
+    await openPuzzle(page);
+    const record = page.locator('#controls [data-action="record"]');
+    await record.click();
+    const release1 = await dragOneMatch(page);
+    await release1();
+    await page.locator('#controls [data-action="reset"]').click();
+    await expect(page.locator('#rec-indicator')).toBeVisible();
+    const release2 = await dragOneMatch(page);
+    await release2();
+    await page.locator('#controls [data-action="solution"]').click();
+    await expect(page.locator('#rec-indicator')).toBeVisible();
+    await page.locator('#controls [data-action="reset"]').click();
+    await page.waitForTimeout(400);
+    await record.click();
+    const link = page.locator('#rec-download');
+    await expect(link).toHaveAttribute('href', /^blob:/);
+    const href = await link.getAttribute('href');
+    const size = await page.evaluate(async (url) => (await (await fetch(url)).blob()).size, href);
+    expect(size).toBeGreaterThan(0);
+  });
+
+  test('double click on Stop does not throw', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await openPuzzle(page);
+    const record = page.locator('#controls [data-action="record"]');
+    await record.click();
+    await page.waitForTimeout(300);
+    await record.dblclick();
+    await expect(page.locator('#recording')).toBeVisible();
+    expect(errors).toEqual([]);
   });
 
   test('leaving the play view stops the recording and keeps the result', async ({ page }) => {

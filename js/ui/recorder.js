@@ -21,22 +21,25 @@ export function pickMimeType() {
 
 /**
  * Vytvorí nahrávač.
- * @param {{getScene:()=>object, fps?:number, maxSeconds?:number, onEnd?:(blob:Blob)=>void}} opts
+ * @param {{getScene:()=>?object, fps?:number, maxSeconds?:number,
+ *   onEnd?:(blob:Blob)=>void, onError?:(error:Error)=>void}} opts
  *   getScene = aktuálna scéna pre drawScene, onEnd sa zavolá po každom skončení
- *   nahrávania (aj po automatickom zastavení po maxSeconds)
- * @returns {{isSupported:()=>boolean, start:()=>void, stop:()=>Promise<Blob>,
- *   elapsed:()=>number, state:string}} API (state: 'idle' | 'recording')
+ *   nahrávania (aj po automatickom zastavení po maxSeconds), onError pri zlyhaní štartu
+ * @returns {{isSupported:()=>boolean, start:()=>void, stop:()=>Promise<?Blob>,
+ *   elapsed:()=>number, state:string}} API (state: 'idle' | 'recording' | 'stopping')
  */
 export function createRecorder({
-  getScene, fps = 30, maxSeconds = MAX_SECONDS, onEnd = () => {},
+  getScene, fps = 30, maxSeconds = MAX_SECONDS, onEnd = () => {}, onError = () => {},
 }) {
   let state = 'idle';
   let recorder = null;
+  let stream = null;
   let canvas = null;
   let frame = 0;
   let startedAt = 0;
   let limitTimer = 0;
-  let finished = null; // Promise<Blob> bežiaceho nahrávania
+  let finished = null; // Promise<Blob> posledného nahrávania
+  let drawFailed = false;
 
   /** Podporuje prehliadač nahrávanie z plátna do videa? */
   function isSupported() {
@@ -46,59 +49,97 @@ export function createRecorder({
       && pickMimeType() !== null;
   }
 
-  /** Nakreslí jeden snímok a naplánuje ďalší. */
+  /** Nakreslí jeden snímok a naplánuje ďalší; chyba kreslenia sa zapíše raz a slučku nezruší. */
   function tick() {
-    const scene = getScene();
-    if (scene) drawScene(canvas.getContext('2d'), scene, canvas);
+    try {
+      const scene = getScene();
+      if (scene) drawScene(canvas.getContext('2d'), scene, canvas);
+    } catch (error) {
+      if (!drawFailed) console.error('Recording: drawing failed', error);
+      drawFailed = true;
+    }
     frame = requestAnimationFrame(tick);
   }
 
-  /** Spustí nahrávanie aktuálnej úlohy (nič, ak už beží). */
+  /** Uvoľní stopy prúdu, plátno a MediaRecorder. */
+  function release() {
+    clearTimeout(limitTimer);
+    cancelAnimationFrame(frame);
+    stream?.getTracks().forEach((track) => track.stop());
+    stream = null;
+    canvas = null;
+    recorder = null;
+  }
+
+  /** Spustí nahrávanie aktuálnej úlohy (ignoruje sa, ak už niečo beží alebo končí). */
   function start() {
-    if (state === 'recording') return;
+    if (state !== 'idle') return;
     const scene = getScene();
+    if (!scene) return;
     const size = canvasSize(scene.board, VIDEO_WIDTH);
-    canvas = document.createElement('canvas');
-    canvas.width = size.width;
-    canvas.height = size.height;
-    drawScene(canvas.getContext('2d'), scene, size); // prvý snímok je hneď k dispozícii
     const mimeType = pickMimeType();
     const chunks = [];
-    recorder = new MediaRecorder(canvas.captureStream(fps), { mimeType, videoBitsPerSecond: 2_500_000 });
-    recorder.ondataavailable = (event) => {
+    try {
+      canvas = document.createElement('canvas');
+      canvas.width = size.width;
+      canvas.height = size.height;
+      drawScene(canvas.getContext('2d'), scene, size); // prvý snímok je hneď k dispozícii
+      stream = canvas.captureStream(fps);
+      recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 2_500_000 });
+    } catch (error) {
+      release();
+      onError(error);
+      return;
+    }
+    const current = recorder;
+    current.ondataavailable = (event) => {
       if (event.data?.size > 0) chunks.push(event.data);
     };
+    current.onerror = () => halt();
     finished = new Promise((resolve) => {
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: recorder.mimeType || mimeType });
+      current.onstop = () => {
+        const blob = new Blob(chunks, { type: current.mimeType || mimeType });
+        release();
         state = 'idle';
         resolve(blob);
         onEnd(blob);
       };
     });
-    recorder.start(500);
+    drawFailed = false;
+    current.start(500);
     state = 'recording';
     startedAt = performance.now();
     frame = requestAnimationFrame(tick);
-    limitTimer = setTimeout(() => stop(), maxSeconds * 1000);
+    limitTimer = setTimeout(() => halt(), maxSeconds * 1000);
   }
 
-  /**
-   * Zastaví nahrávanie.
-   * @returns {Promise<Blob>} hotové video
-   */
-  function stop() {
-    if (state !== 'recording') return finished ?? Promise.reject(new Error('not recording'));
+  /** Ukončí nahrávanie; opakované volanie je bezpečné (stav 'stopping' sa nastaví hneď). */
+  function halt() {
+    if (state !== 'recording') return finished;
+    state = 'stopping';
     clearTimeout(limitTimer);
     cancelAnimationFrame(frame);
-    recorder.stop();
+    if (recorder.state !== 'inactive') {
+      try {
+        recorder.stop();
+      } catch (error) {
+        console.error('Recording: stop failed', error);
+        recorder.onstop();
+      }
+    } else {
+      recorder.onstop();
+    }
     return finished;
   }
 
   return {
     isSupported,
     start,
-    stop,
+    /**
+     * Zastaví nahrávanie (idempotentne).
+     * @returns {Promise<?Blob>} hotové video (null, ak ešte nič nenahrávalo)
+     */
+    stop: () => halt() ?? Promise.resolve(null),
     /** Dĺžka nahrávania v sekundách (0, ak nebeží). */
     elapsed: () => (state === 'recording' ? (performance.now() - startedAt) / 1000 : 0),
     get state() {

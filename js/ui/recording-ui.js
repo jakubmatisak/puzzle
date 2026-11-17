@@ -36,6 +36,11 @@ export function createRecordingUi({ root, game, i18n }) {
   const recorder = createRecorder({
     getScene: game.getScene,
     onEnd: (blob) => showResult(blob),
+    onError: () => {
+      clearInterval(timer);
+      renderButton();
+      note.hidden = false; // štart zlyhal: ukáž hlášku, predošlé video ostáva
+    },
   });
 
   /** Tlačidlo: text podľa stavu (data-i18n, aby ho prekladal aj prepínač jazyka). */
@@ -44,7 +49,6 @@ export function createRecordingUi({ root, game, i18n }) {
     label.dataset.i18n = recording ? 'game.stopRecord' : 'game.record';
     label.textContent = i18n.t(label.dataset.i18n);
     button.classList.toggle('is-recording', recording);
-    button.setAttribute('aria-pressed', String(recording));
     indicator.hidden = !recording;
   }
 
@@ -66,6 +70,7 @@ export function createRecordingUi({ root, game, i18n }) {
   function showResult(blob) {
     clearInterval(timer);
     renderButton();
+    if (blob.size === 0) return; // nahrávanie zlyhalo: ostane predošlý výsledok
     clearResult();
     url = URL.createObjectURL(blob);
     const video = document.createElement('video');
@@ -77,6 +82,7 @@ export function createRecordingUi({ root, game, i18n }) {
     download.href = url;
     download.download = `zapalkovo-${puzzleId}.webm`;
     panel.hidden = false;
+    download.focus();
   }
 
   /** Spustí nahrávanie aktuálnej úlohy. */

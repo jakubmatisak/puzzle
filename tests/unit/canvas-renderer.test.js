@@ -67,7 +67,9 @@ describe('drawScene', () => {
     drawScene(ctx, sceneOf(), SIZE);
     const fit = fitTransform(puzzle.board, SIZE.width, SIZE.height);
     const set = ctx.calls.filter((c) => c.name === 'setTransform');
-    expect(set.some((c) => Math.abs(c.args[0] - fit.scale) < 1e-9 && Math.abs(c.args[3] - fit.scale) < 1e-9)).toBe(true);
+    // 1. volanie = identita (pozadie), 2. = posun a mierka dosky
+    expect(set[0].args).toEqual([1, 0, 0, 1, 0, 0]);
+    expect(set[1].args).toEqual([fit.scale, 0, 0, fit.scale, fit.tx, fit.ty]);
     expect(fit.scale).toBeGreaterThan(0);
   });
 
