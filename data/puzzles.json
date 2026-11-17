@@ -53,8 +53,8 @@
         "en": "Move one match so the equation becomes true."
       },
       "hint": {
-        "sk": "Skús vymeniť čísla.",
-        "en": "Try swapping the numbers around."
+        "sk": "Pozri sa na prvé a posledné číslo.",
+        "en": "Look at the first and the last number."
       }
     },
     {
@@ -73,8 +73,8 @@
         "en": "Move one match so the equation becomes true."
       },
       "hint": {
-        "sk": "Zápalku môžeš otočiť, ťuknutím na ňu. Skús zmeniť znamienko.",
-        "en": "You can rotate a match by tapping it. Try changing the sign."
+        "sk": "Zápalku môžeš otočiť dvojitým ťuknutím na ňu. Skús zmeniť znamienko.",
+        "en": "You can rotate a match by double-tapping it. Try changing the sign."
       }
     },
     {
@@ -166,8 +166,8 @@
         "en": "Move one match so the Roman numeral equation becomes true."
       },
       "hint": {
-        "sk": "Jedna zápalka sa dá presunúť z jedného čísla do druhého.",
-        "en": "One match can move from one number to another."
+        "sk": "Porovnaj obe strany rovnosti.",
+        "en": "Compare both sides of the equation."
       }
     },
     {
@@ -220,8 +220,8 @@
         "en": "Move one match so the Roman numeral equation becomes true."
       },
       "hint": {
-        "sk": "Skús upraviť hlavne číslo za znakom rovnosti.",
-        "en": "Pay most attention to the numbers around the equals sign."
+        "sk": "Zmeň čísla okolo znaku rovnosti.",
+        "en": "Change the numbers around the equals sign."
       }
     },
     {
@@ -323,8 +323,8 @@
         "en": "Remove 2 matches so that exactly 3 squares remain and no match is left over."
       },
       "hint": {
-        "sk": "Jeden zo štvorcov bude väčší.",
-        "en": "One of the squares will be larger."
+        "sk": "Jedna bunka mriežky prestane byť štvorcom.",
+        "en": "One cell of the grid will stop being a square."
       }
     },
     {
