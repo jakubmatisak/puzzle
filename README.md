@@ -183,6 +183,7 @@ E2E testy si samy spustia lokálny server na porte 5173. Pokrývajú ťahanie my
 
 - Automaticky: `npm run lint` (html-validate s pravidlami `html-validate:recommended`, stylelint so `stylelint-config-standard`).
 - Ručne po nasadení: HTML cez <https://validator.w3.org/nu/> (adresa nasadeného `index.html`), CSS cez <https://jigsaw.w3.org/css-validator/>.
+- CSS nepoužíva vlastnosti mimo štandardov W3C (žiadne `color-mix`, `backdrop-filter`, `text-wrap`). Jediné vendor rozšírenie je `-webkit-tap-highlight-color` v `css/board.css` (bez neho Chrome na mobile pri ťuknutí na zápalku bliká); Jigsaw ho hlási iba ako varovanie, nie chybu.
 
 ## Použitie AI
 

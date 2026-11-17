@@ -22,7 +22,7 @@
   max-height: 70svh;
   touch-action: none;
   user-select: none;
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent; /* jediné vendor rozšírenie: bez neho Chrome na mobile bliká pri ťuknutí */
 }
 
 /* Prvky, ktoré do dosky kreslí hra */

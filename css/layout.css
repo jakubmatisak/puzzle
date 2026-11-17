@@ -620,8 +620,7 @@
     calc(var(--space-3) + env(safe-area-inset-bottom))
     max(var(--space-4), env(safe-area-inset-left));
   border-top: 1.5px solid var(--line);
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: blur(8px);
+  background: var(--surface);
 }
 
 .btn-tool {
@@ -770,7 +769,6 @@
     padding: 0;
     border: 0;
     background: none;
-    backdrop-filter: none;
   }
 
   .controls > .btn {
@@ -821,7 +819,6 @@
     border-radius: var(--radius);
     background: var(--surface);
     box-shadow: inset 0 0 0 4px var(--surface), inset 0 0 0 5.5px var(--line), var(--shadow-md);
-    backdrop-filter: none;
   }
 
   .btn-tool {
