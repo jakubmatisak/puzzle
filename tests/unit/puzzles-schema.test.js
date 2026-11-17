@@ -67,9 +67,4 @@ describe('normalizePuzzles', () => {
     expect(() => make(eq({ mode: 'jump' }))).toThrow(/e1/);
     expect(() => make(eq({ moves: 0 }))).toThrow(/e1/);
   });
-
-  it('riešenie s {text, without, with} sa overí dekódovaním', () => {
-    const ok = { text: '5+4=9', without: ['c0.b'], with: ['c4.a'] };
-    expect(() => make(eq({ solutions: [{ ...ok, with: ['c4.d'] }] }))).toThrow(/e1/);
-  });
 });

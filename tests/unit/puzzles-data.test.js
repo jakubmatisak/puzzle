@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { normalizePuzzles } from '../../js/core/puzzles.js';
 import { solveEquation } from '../../js/core/solver.js';
 import { isSolved } from '../../js/core/validator.js';
-import { normalizeText } from '../../js/core/decode.js';
+import { isTrueEquation, normalizeText } from '../../js/core/decode.js';
 import { angleDiff } from '../../js/core/geometry.js';
 import {
   createState, moveToSlot, moveToTray, trayPosition, solutionPlan, occupied,
@@ -78,8 +78,26 @@ describe('data/puzzles.json', () => {
     for (const p of puzzles.filter((x) => x.kind === 'equation')) {
       const listed = new Set(p.solutionTexts.map(normalizeText));
       expect(listed.size, `${p.id} duplicity`).toBe(p.solutionTexts.length);
-      expect([...listed].sort(), p.id).toEqual(solveEquation(p));
+      expect([...listed].sort(), p.id).toEqual(solveEquation(p, { canonicalOnly: true }));
     }
+  });
+
+  it('rovnice: každý pravdivý presun (aj variant číslice) hra uzná', () => {
+    let variants = 0;
+    for (const p of puzzles.filter((x) => x.kind === 'equation')) {
+      const empty = p.board.slots.map((sl) => sl.id).filter((id) => !p.start.has(id));
+      for (const from of p.start) {
+        for (const to of empty) {
+          const start = createState(p);
+          const id = start.matches.find((m) => m.slot === from).id;
+          const state = moveToSlot(start, id, to, p.board);
+          if (!isTrueEquation(p.types, occupied(state))) continue;
+          expect(isSolved(state, p), `${p.id} ${from}->${to}`).toBe(true);
+          variants += 1;
+        }
+      }
+    }
+    expect(variants).toBeGreaterThan(0);
   });
 
   it('aspoň jedna úloha vyžaduje rotáciu zápalky', () => {

@@ -2,6 +2,7 @@
  * Solver hrubou silou: nájde všetky pravdivé rovnice dosiahnuteľné k presunmi.
  */
 import { decodeBoard, normalizeText } from './decode.js';
+import { encodeText } from './glyphs.js';
 import { tokenize, evaluate } from './expression.js';
 
 /** Všetky k-prvkové kombinácie poľa (k ≤ 2). */
@@ -15,6 +16,11 @@ function combinations(items, k) {
   return out;
 }
 
+/** Rovnosť dvoch množín. */
+function sameSet(a, b) {
+  return a.size === b.size && [...a].every((x) => b.has(x));
+}
+
 /** Je dekódovaný text pravdivá rovnica? */
 function isTrue(text, types) {
   return evaluate(tokenize([...text].map((ch, i) => ({ type: types[i], ch }))));
@@ -22,10 +28,13 @@ function isTrue(text, types) {
 
 /**
  * Vráti zoradené unikátne pravdivé texty (bez medzier) po presne `moves` presunoch.
+ * Pri `canonicalOnly` sa nechajú len výsledky nakreslené kanonickými glyfmi
+ * (bez variantov ako deviatka bez spodnej zápalky).
  * @param {{kind:string, mode:string, moves:number, types:string[], board:object, start:Set<string>}} puzzle
+ * @param {{canonicalOnly?:boolean}} [opts]
  * @returns {string[]}
  */
-export function solveEquation(puzzle) {
+export function solveEquation(puzzle, { canonicalOnly = false } = {}) {
   const k = puzzle.moves;
   if (puzzle.mode !== 'move') throw new Error('Solver podporuje iba režim move');
   if (k > 2) throw new Error('Solver podporuje najviac 2 presuny');
@@ -38,7 +47,9 @@ export function solveEquation(puzzle) {
       vacate.forEach((id) => occ.delete(id));
       fill.forEach((id) => occ.add(id));
       const text = decodeBoard(puzzle.types, occ);
-      if (text !== null && isTrue(text, puzzle.types)) found.add(normalizeText(text));
+      if (text === null || !isTrue(text, puzzle.types)) continue;
+      if (canonicalOnly && !sameSet(occ, encodeText(text, puzzle.types))) continue;
+      found.add(normalizeText(text));
     }
   }
   return [...found].sort();

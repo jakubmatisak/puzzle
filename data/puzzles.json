@@ -85,15 +85,6 @@
       "start": "6+4=4",
       "solutions": [
         "0+4=4",
-        {
-          "text": "5+4=9",
-          "without": [
-            "c0.e"
-          ],
-          "with": [
-            "c4.a"
-          ]
-        },
         "8-4=4"
       ],
       "task": {
@@ -132,16 +123,7 @@
       "solutions": [
         "2-5<9",
         "2-6<3",
-        "2-9<3",
-        {
-          "text": "2+5<9",
-          "without": [
-            "c4.d"
-          ],
-          "with": [
-            "c4.f"
-          ]
-        }
+        "2-9<3"
       ],
       "task": {
         "sk": "Presuň jednu zápalku tak, aby nerovnica platila.",
@@ -159,24 +141,15 @@
       "moves": 1,
       "start": "6+7=12",
       "solutions": [
-        "6+7=13",
-        {
-          "text": "5+7=12",
-          "without": [
-            "c0.e"
-          ],
-          "with": [
-            "c2.f"
-          ]
-        }
+        "6+7=13"
       ],
       "task": {
         "sk": "Presuň jednu zápalku tak, aby rovnica platila.",
         "en": "Move one match so the equation becomes true."
       },
       "hint": {
-        "sk": "Dvojciferné číslo sa dá upraviť aj zľava, aj sprava.",
-        "en": "A two-digit number can be changed on either side."
+        "sk": "Pozri sa na poslednú číslicu.",
+        "en": "Look at the last digit."
       }
     },
     {

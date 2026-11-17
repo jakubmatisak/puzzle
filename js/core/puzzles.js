@@ -3,7 +3,6 @@
  * úlohy (sety slotov, doska, typy buniek), s ktorými pracuje validátor a solver.
  */
 import { layoutEquation, encodeText } from './glyphs.js';
-import { decodeBoard } from './decode.js';
 import { gridSlots, triSlots } from './lattice.js';
 import { buildBoard } from './board-model.js';
 
@@ -42,44 +41,21 @@ function checkEquationText(text, label) {
   }
 }
 
-/** Text riešenia: reťazec, alebo objekt {text, without, with}. */
-function solutionText(entry) {
-  return typeof entry === 'string' ? entry : entry?.text;
-}
-
-/**
- * Množina slotov riešenia rovnice. Objekt {text, without, with} popisuje
- * netypický zápis znaku (napr. deviatka bez spodnej zápalky) ako štart
- * bez `without` a s pridanými `with`; jeho text sa overí dekódovaním.
- */
-function equationSolution(entry, start, layout, label) {
-  if (typeof entry === 'string') return encodeText(entry, layout.types);
-  const set = new Set([...start].filter((id) => !entry.without.includes(id)));
-  entry.with.forEach((id) => set.add(id));
-  const decoded = decodeBoard(layout.types, set);
-  if (decoded === null || decoded.replace(/ /g, '') !== entry.text.replace(/ /g, '')) {
-    throw fail(label, `sloty riešenia '${entry.text}' sa nedekódujú na jeho text`);
-  }
-  return set;
-}
-
 /** Zostaví úlohu typu rovnica (doska z rozloženia všetkých textov). */
 function buildEquation(raw, base) {
-  const solTexts = raw.solutions.map(solutionText);
-  const texts = [raw.start, ...solTexts];
+  const texts = [raw.start, ...raw.solutions];
   texts.forEach((t) => checkEquationText(t, raw.id));
   if (texts.some((t) => t.length !== raw.start.length)) {
     throw fail(raw.id, 'štart a riešenia musia mať rovnakú dĺžku');
   }
   const layout = layoutEquation(texts);
-  const start = encodeText(raw.start, layout.types);
   return {
     ...base,
     board: buildBoard(layout.slots),
     types: layout.types,
-    start,
-    solutions: raw.solutions.map((e) => equationSolution(e, start, layout, raw.id)),
-    solutionTexts: solTexts,
+    start: encodeText(raw.start, layout.types),
+    solutions: raw.solutions.map((t) => encodeText(t, layout.types)),
+    solutionTexts: [...raw.solutions],
   };
 }
 
