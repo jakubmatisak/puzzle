@@ -1,0 +1,136 @@
+import { describe, it, expect } from 'vitest';
+import {
+  createState, occupied, trayMatches, moveToSlot, moveToTray, rotateMatch,
+  movesUsed, resetState, solutionPlan,
+} from '../../js/core/puzzle-state.js';
+import { buildBoard } from '../../js/core/board-model.js';
+import { layoutEquation, encodeText } from '../../js/core/glyphs.js';
+import { gridSlots } from '../../js/core/lattice.js';
+
+function equationPuzzle(start, sols) {
+  const { types, slots } = layoutEquation([start, ...sols]);
+  return {
+    board: buildBoard(slots),
+    start: encodeText(start, types),
+    solutions: sols.map((s) => encodeText(s, types)),
+    mode: 'move',
+    moves: 1,
+  };
+}
+
+function logPuzzle() {
+  const slots = gridSlots(2, 2);
+  const all = new Set(slots.map((s) => s.id));
+  const sol = new Set(all);
+  sol.delete('h1-0');
+  sol.delete('v0-1');
+  return { board: buildBoard(slots), start: all, solutions: [sol], mode: 'remove', moves: 2 };
+}
+
+const num = () => equationPuzzle('9+4=5', ['5+4=9']);
+
+describe('createState', () => {
+  it('num-01 má 19 zápaliek m0.. na slotoch štartu', () => {
+    const p = num();
+    const s = createState(p);
+    expect(s.matches.length).toBe(19);
+    expect(s.matches[0].id).toBe('m0');
+    for (const m of s.matches) {
+      const slot = p.board.slotById.get(m.slot);
+      expect([m.x, m.y, m.angle]).toEqual([slot.x, slot.y, slot.angle]);
+    }
+    expect(occupied(s)).toEqual(p.start);
+    expect(trayMatches(s)).toEqual([]);
+  });
+});
+
+describe('moveToSlot', () => {
+  it('presun c0.b -> c4.b: movesUsed 1, pôvodný stav nezmenený', () => {
+    const p = num();
+    const s = createState(p);
+    const before = structuredClone(s);
+    const id = s.matches.find((m) => m.slot === 'c0.b').id;
+    const t = moveToSlot(s, id, 'c4.b', p.board);
+    expect(s).toEqual(before);
+    expect(occupied(t).has('c4.b')).toBe(true);
+    expect(occupied(t).has('c0.b')).toBe(false);
+    expect(movesUsed(t, p)).toBe(1);
+    expect(movesUsed(s, p)).toBe(0);
+    const m = t.matches.find((x) => x.id === id);
+    expect([m.x, m.y, m.angle]).toEqual([
+      p.board.slotById.get('c4.b').x, p.board.slotById.get('c4.b').y, 90,
+    ]);
+  });
+  it('hádže pri obsadenom alebo neznámom slote', () => {
+    const p = num();
+    const s = createState(p);
+    expect(() => moveToSlot(s, 'm0', 'c0.b', p.board)).toThrow();
+    expect(() => moveToSlot(s, 'm0', 'nic', p.board)).toThrow();
+  });
+});
+
+describe('moveToTray', () => {
+  it('uvoľní slot, uhol 90', () => {
+    const p = num();
+    const s = createState(p);
+    const t = moveToTray(s, 'm0', { x: 5, y: 7 });
+    const m = t.matches[0];
+    expect([m.slot, m.x, m.y, m.angle]).toEqual([null, 5, 7, 90]);
+    expect(trayMatches(t).length).toBe(1);
+    expect(s.matches[0].slot).not.toBe(null);
+    expect(movesUsed(t, p)).toBe(1);
+  });
+});
+
+describe('rotateMatch', () => {
+  it('c1.h 0° -> 45° sa prichytí do c1.x1', () => {
+    const p = num();
+    const s = createState(p);
+    const id = s.matches.find((m) => m.slot === 'c1.h').id;
+    const t = rotateMatch(s, id, p.board);
+    const m = t.matches.find((x) => x.id === id);
+    expect(m.angle).toBe(45);
+    expect(m.slot).toBe('c1.x1');
+    expect(s.matches.find((x) => x.id === id).angle).toBe(0);
+  });
+  it('bez voľného slotu sa zápalka uvoľní na rovnakých súradniciach', () => {
+    const p = equationPuzzle('9+4=5', ['5+4=9']);
+    const s = createState(p);
+    const id = s.matches.find((m) => m.slot === 'c0.a').id;
+    const before = s.matches.find((m) => m.id === id);
+    const t = rotateMatch(s, id, p.board);
+    const m = t.matches.find((x) => x.id === id);
+    expect(m.angle).toBe(45);
+    expect(m.slot).toBe(null);
+    expect([m.x, m.y]).toEqual([before.x, before.y]);
+  });
+  it('zápalka mimo slotu sa len otočí (90 -> 135)', () => {
+    const p = num();
+    let s = createState(p);
+    s = moveToTray(s, 'm0', { x: 0, y: 0 });
+    const t = rotateMatch(s, 'm0', p.board);
+    expect(t.matches[0].angle).toBe(135);
+    expect(t.matches[0].slot).toBe(null);
+  });
+});
+
+describe('resetState a movesUsed', () => {
+  it('reset = nový štart', () => {
+    const p = num();
+    const s = moveToSlot(createState(p), 'm0', 'c4.b', p.board);
+    expect(movesUsed(s, p)).toBeGreaterThanOrEqual(0);
+    expect(resetState(p)).toEqual(createState(p));
+  });
+});
+
+describe('solutionPlan', () => {
+  it('num-01', () => {
+    expect(solutionPlan(num(), 0)).toEqual([{ from: 'c0.b', to: 'c4.b' }]);
+  });
+  it('log-01 remove -> tray', () => {
+    expect(solutionPlan(logPuzzle(), 0)).toEqual([
+      { from: 'h1-0', to: 'tray' },
+      { from: 'v0-1', to: 'tray' },
+    ]);
+  });
+});
