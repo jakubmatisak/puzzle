@@ -164,6 +164,25 @@
             <span data-i18n="board.rotateTip">Tip: otoč telefón na šírku – zápalky budú väčšie.</span>
             <button type="button" class="rotate-tip-close" data-i18n-attr="aria-label:board.closeTip" aria-label="Zavrieť tip"><span aria-hidden="true">×</span></button>
           </p>
+          <!-- Oslava po vyriešení: padajúce iskry a karta s tlačidlom na ďalšiu úlohu -->
+          <div id="success" class="success" role="status" hidden>
+            <div class="sparks" aria-hidden="true">
+              <span class="spark"></span><span class="spark"></span><span class="spark"></span>
+              <span class="spark"></span><span class="spark"></span><span class="spark"></span>
+              <span class="spark"></span><span class="spark"></span><span class="spark"></span>
+            </div>
+            <div class="success-card">
+              <svg class="icon success-icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg>
+              <p class="success-text">
+                <strong class="success-title" data-i18n="game.solvedTitle">Výborne!</strong>
+                <span data-i18n="game.solvedText">Úloha je vyriešená.</span>
+              </p>
+              <button type="button" class="btn btn-primary success-next" data-action="next">
+                <span data-i18n="game.next">Ďalšia úloha</span>
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-next"/></svg>
+              </button>
+            </div>
+          </div>
         </div>
         <p id="message" class="message" aria-live="polite"></p>
         <div id="controls" class="controls" role="group" data-i18n-attr="aria-label:game.controls" aria-label="Ovládanie hry">
@@ -183,7 +202,7 @@
             <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-reset"/></svg>
             <span data-i18n="game.reset">Reset</span>
           </button>
-          <button type="button" class="btn btn-tool" data-action="rotate">
+          <button type="button" class="btn btn-tool" data-action="rotate" disabled>
             <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-rotate"/></svg>
             <span data-i18n="game.rotate">Otočiť</span>
           </button>

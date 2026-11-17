@@ -545,6 +545,12 @@
   white-space: nowrap;
 }
 
+.moves.is-over {
+  border-color: var(--head-1);
+  background: var(--head-1);
+  color: #fff;
+}
+
 .message {
   grid-area: message;
   min-height: 1.6em;
@@ -581,6 +587,38 @@
 
 .btn-record .icon {
   color: var(--head-1);
+}
+
+/* Telefón: „Ďalšia úloha“ cez celý riadok, ostatné tlačidlá bez dier v mriežke
+   (5 tlačidiel = 3 + 2, so „Ďalším riešením“ vedľa „Riešenia“ = 3 + 3). */
+@media (width < 600px) {
+  .controls {
+    grid-template-areas:
+      "hint hint solution solution reset reset"
+      "rotate rotate rotate record record record"
+      "next next next next next next";
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .controls:has([data-action="next-solution"]:not([hidden])) {
+    grid-template-areas:
+      "hint hint solution solution alt alt"
+      "reset reset rotate rotate record record"
+      "next next next next next next";
+  }
+
+  .controls [data-action="hint"] { grid-area: hint; }
+  .controls [data-action="solution"] { grid-area: solution; }
+  .controls [data-action="next-solution"] { grid-area: alt; }
+  .controls [data-action="reset"] { grid-area: reset; }
+  .controls [data-action="rotate"] { grid-area: rotate; }
+  .controls [data-action="record"] { grid-area: record; }
+  .controls [data-action="next"] { grid-area: next; }
+
+  .controls .btn-primary {
+    flex-direction: row;
+    min-height: var(--tap);
+  }
 }
 
 @media (width >= 600px) {
