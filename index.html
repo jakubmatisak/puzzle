@@ -8,6 +8,8 @@
   <meta name="theme-color" content="#1b1410" media="(prefers-color-scheme: dark)">
   <title data-i18n="app.docTitle">Zápalkovo – hlavolamy so zápalkami</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="stylesheet" href="./css/tokens.css">
   <link rel="stylesheet" href="./css/base.css">
   <link rel="stylesheet" href="./css/layout.css">
@@ -91,6 +93,10 @@
           <span data-i18n="nav.help">Návod</span>
         </a>
       </nav>
+      <button type="button" id="install-btn" class="lang-toggle install-btn" data-i18n-attr="aria-label:app.install" aria-label="Inštalovať" hidden>
+        <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-install"/></svg>
+        <span class="install-label" data-i18n="app.install">Inštalovať</span>
+      </button>
       <button type="button" id="lang-toggle" class="lang-toggle">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-globe"/></svg>
         <span class="lang-code" aria-hidden="true" data-i18n="lang.short">EN</span>

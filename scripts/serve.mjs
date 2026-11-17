@@ -18,14 +18,14 @@ const MIME = {
 };
 
 function send(res, status, body, type = 'text/plain; charset=utf-8') {
-  res.writeHead(status, { 'Content-Type': type });
+  res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' });
   res.end(body);
 }
 
 createServer(async (req, res) => {
   try {
     const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-    if (pathname.split(/[\/]/).includes('..')) return send(res, 403, 'Forbidden');
+    if (pathname.split(/[/\\]/).includes('..')) return send(res, 403, 'Forbidden');
     let file = normalize(join(root, pathname));
     if (file !== root && !file.startsWith(root + sep)) return send(res, 403, 'Forbidden');
     const info = await stat(file).catch(() => null);

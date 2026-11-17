@@ -1,11 +1,8 @@
 {
   "name": "zapalkovo",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs"
-  },
+  "private": true,
+  "type": "module",
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
@@ -15,10 +12,7 @@
     "icons": "node scripts/make-icons.mjs",
     "zip": "node scripts/make-zip.mjs"
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
-  "type": "module",
   "devDependencies": {
     "@playwright/test": "^1.65.1",
     "html-validate": "^11.21.1",

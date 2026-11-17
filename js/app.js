@@ -12,6 +12,8 @@ import { createGame } from './ui/game.js';
 import { renderHome } from './ui/home.js';
 import { initSensors } from './ui/sensors.js';
 import { createRecordingUi } from './ui/recording-ui.js';
+import { registerServiceWorker } from './ui/sw-register.js';
+import { initInstallButton } from './ui/install-button.js';
 
 const VIEWS = ['home', 'play', 'help'];
 
@@ -118,6 +120,8 @@ async function init() {
     onHint: (key) => game?.onBoardHint(key),
     t: i18n.t,
   });
+  initInstallButton(document.getElementById('install-btn'));
+  registerServiceWorker();
   startRouter(showView);
   try {
     data = await loadPuzzles();
