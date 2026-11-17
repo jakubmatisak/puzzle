@@ -21,9 +21,15 @@ function permissionRequests() {
     .filter((request) => typeof request === 'function');
 }
 
+/** Tlačidlo povolenia treba iba na dotykovom zariadení, ktoré povolenie vyžaduje (iOS). */
+function needsPermissionButton() {
+  return permissionRequests().length > 0 && Boolean(window.matchMedia?.('(pointer: coarse)').matches);
+}
+
 /**
- * Zapne senzory. Ak prehliadač vyžaduje povolenie (iOS), zobrazí tlačidlo
- * a listenery pridá až po udelení povolenia; inak ich pridá hneď.
+ * Zapne senzory. Listenery pridá hneď; ak prehliadač vyžaduje povolenie (iOS)
+ * na dotykovom zariadení, zobrazí tlačidlo, ktoré zmizne po udelení povolenia
+ * alebo hneď, ako príde prvá udalosť natočenia s údajom (senzory evidentne fungujú).
  * @param {{onTiltLeft: Function, onDoubleShake: Function, i18n: {t: Function},
  *   buttonEl: HTMLElement, isActive?: () => boolean, onMessage?: (key: string) => void}} opts
  *   isActive = senzory reagujú iba keď vráti true (napr. na obrazovke hry),
@@ -45,6 +51,7 @@ export function initSensors({
   /** Udalosť natočenia: počíta náklon doľava. Mimo hry sa detektor vynuluje. */
   function onOrientation(event) {
     const t = event.timeStamp;
+    if (event.gamma != null) buttonEl.hidden = true;
     const active = isActive();
     const roll = active ? effectiveRoll(event.beta, event.gamma, currentScreenAngle()) : 0;
     if (tilt.update(roll, t) && active) onTiltLeft();
@@ -78,23 +85,27 @@ export function initSensors({
     window.removeEventListener('devicemotion', onMotion);
   }
 
-  /** Klik na „Povoliť senzory“: vyžiada povolenie a podľa výsledku zapne senzory. */
+  /** Klik na „Povoliť senzory“: vyžiada povolenie; po udelení tlačidlo zmizne. */
   async function requestAccess() {
+    let results;
     try {
-      const results = await Promise.all(permissionRequests().map((request) => request()));
-      if (!results.every((result) => result === 'granted')) throw new Error('denied');
-      attach();
-      buttonEl.hidden = true;
+      results = await Promise.all(permissionRequests().map((request) => request()));
     } catch {
-      onMessage('sensors.denied');
+      results = ['denied'];
     }
+    if (!results.every((result) => result === 'granted')) {
+      onMessage('sensors.denied');
+      return;
+    }
+    buttonEl.hidden = true;
   }
 
-  if (permissionRequests().length > 0) {
+  // Listenery vždy hneď: kde povolenie netreba (Android), fungujú okamžite;
+  // na iOS bez povolenia udalosti jednoducho nechodia.
+  attach();
+  if (needsPermissionButton()) {
     buttonEl.hidden = false;
     buttonEl.addEventListener('click', requestAccess);
-  } else {
-    attach();
   }
 
   return { stop };

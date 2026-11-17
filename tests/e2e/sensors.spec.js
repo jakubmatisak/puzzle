@@ -123,7 +123,17 @@ test.describe('sensors', () => {
     await expect(page.locator('#message')).toBeEmpty();
   });
 
-  test('iOS-style permission: denied shows the message without errors', async ({ page }) => {
+  test('permission API on a fine pointer (desktop): button stays hidden', async ({ page }, info) => {
+    test.skip(info.project.name !== 'chromium', 'desktop project only');
+    await page.addInitScript(() => {
+      DeviceOrientationEvent.requestPermission = () => Promise.resolve('granted');
+    });
+    await openPuzzle(page);
+    await expect(page.locator('#sensors-btn')).toBeHidden();
+  });
+
+  test('iOS-style permission: denied shows the message without errors', async ({ page }, info) => {
+    test.skip(info.project.name !== 'mobile-chrome', 'coarse pointer only');
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
@@ -136,22 +146,55 @@ test.describe('sensors', () => {
     await expect(button).toContainText('Povoliť senzory');
     await button.click();
     await expect(page.locator('#message')).toContainText('Prístup k senzorom bol zamietnutý');
-    await tiltLeft(page);
-    await expect(page.locator('#message')).not.toContainText('Toto je riešenie');
+    await expect(button).toBeVisible();
     expect(errors).toEqual([]);
   });
 
-  test('iOS-style permission: granted hides the button and enables tilt', async ({ page }) => {
+  test('iOS-style permission: granted hides the button', async ({ page }, info) => {
+    test.skip(info.project.name !== 'mobile-chrome', 'coarse pointer only');
     await page.addInitScript(() => {
       DeviceOrientationEvent.requestPermission = () => Promise.resolve('granted');
     });
     await openPuzzle(page);
-    await tiltLeft(page);
-    await expect(page.locator('#message')).toBeEmpty(); // pred povolením nič
     await page.locator('#sensors-btn').click();
     await expect(page.locator('#sensors-btn')).toBeHidden();
-    await tiltLeft(page);
-    await expect(page.locator('#message')).toContainText('Toto je riešenie');
+  });
+
+  test('button hides itself once an orientation event with gamma arrives', async ({ page }, info) => {
+    test.skip(info.project.name !== 'mobile-chrome', 'coarse pointer only');
+    await page.addInitScript(() => {
+      DeviceOrientationEvent.requestPermission = () => Promise.resolve('granted');
+    });
+    await openPuzzle(page);
+    await expect(page.locator('#sensors-btn')).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new DeviceOrientationEvent('deviceorientation', { beta: 0, gamma: 5 })));
+    await expect(page.locator('#sensors-btn')).toBeHidden();
+  });
+
+  test('a shake during the solution animation resets cleanly', async ({ page }) => {
+    await openPuzzle(page);
+    const before = await occupiedSlots(page);
+    await tiltLeft(page, 400);
+    await shakeBurst(page);
+    await quiet(page);
+    await shakeBurst(page);
+    await expect.poll(() => occupiedSlots(page)).toEqual(before);
+    await page.waitForTimeout(1500);
+    expect(await occupiedSlots(page)).toEqual(before);
+    await expect(page.locator('#success')).toBeHidden();
+    await expect(page.locator('#message')).toContainText('zresetovaná');
+  });
+
+  test('holding the tilt for 2 s shows the solution only once', async ({ page }) => {
+    await openPuzzle(page);
+    await page.evaluate(() => {
+      const game = window.__zapalkovoGame;
+      const original = game.showSolution;
+      window.__solutionCalls = 0;
+      game.showSolution = (...args) => { window.__solutionCalls += 1; return original(...args); };
+    });
+    await tiltLeft(page, 2000);
+    expect(await page.evaluate(() => window.__solutionCalls)).toBe(1);
   });
 
   test('button stays hidden when no permission is needed', async ({ page }) => {
