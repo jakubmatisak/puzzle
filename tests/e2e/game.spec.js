@@ -89,7 +89,9 @@ test.describe('solve every puzzle through the UI', () => {
       await solveByMouse(page, puzzle);
       const success = page.locator('#success');
       await expect(success).toBeVisible();
-      await expect(success).toHaveAttribute('role', 'status');
+      // Úspech hlási iba živá oblasť #message (nie dvakrát cez role="status")
+      await expect(success).not.toHaveAttribute('role', 'status');
+      await expect(page.locator('#message')).toContainText('Výborne');
       await expect(success).toContainText('Výborne');
       await expect(success.locator('[data-action="next"]')).toBeFocused();
     });

@@ -65,11 +65,29 @@ test.describe('page shell', () => {
     await expect(page.locator('#view-home')).toBeHidden();
   });
 
+  test('phone landscape 812x375: whole board is visible without scrolling', async ({ page }) => {
+    await page.setViewportSize({ width: 812, height: 375 });
+    await page.goto('./#/play/numbers?puzzle=num-01');
+    await expect(page.locator('#board .match').first()).toBeVisible();
+    const box = await page.locator('#board').boundingBox();
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(375);
+    const ok = await page.evaluate(() =>
+      document.documentElement.scrollWidth <= document.documentElement.clientWidth);
+    expect(ok).toBe(true);
+  });
+
   test('no horizontal scroll at 375x812', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    for (const hash of ['#/', '#/help', '#/play/numbers']) {
+    const views = [
+      ['#/', '#categories .category-card'],
+      ['#/help', '#view-help article[lang="sk"]'],
+      ['#/play/numbers', '#board .match'],
+      ['#/play/roman?puzzle=rom-02', '#board .match'],
+    ];
+    for (const [hash, ready] of views) {
       await page.goto(`./${hash}`);
-      await page.waitForTimeout(100);
+      await expect(page.locator(ready).first()).toBeVisible();
       const ok = await page.evaluate(() =>
         document.documentElement.scrollWidth <= document.documentElement.clientWidth);
       expect(ok, hash).toBe(true);

@@ -13,7 +13,7 @@
   position: absolute;
   inset: auto 0 -8px;
   height: 8px;
-  background-color: #5a3a24;
+  background-color: var(--striker);
   background-image:
     radial-gradient(circle at 25% 35%, rgb(255 220 180 / 22%) 0 0.6px, transparent 1px),
     radial-gradient(circle at 70% 65%, rgb(0 0 0 / 35%) 0 0.7px, transparent 1.2px);
@@ -299,7 +299,7 @@
 }
 
 .box-striker {
-  fill: #5a3a24;
+  fill: var(--striker);
 }
 
 .hero-title {
@@ -609,8 +609,16 @@
   grid-area: controls;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-2);
-  margin-inline: calc(-1 * var(--space-4));
-  padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
+
+  /* Lišta siaha cez celý okraj .site-main (rovnaký výraz ako jeho padding vrátane safe-area) */
+  margin-inline:
+    calc(-1 * max(var(--space-4), env(safe-area-inset-left)))
+    calc(-1 * max(var(--space-4), env(safe-area-inset-right)));
+  padding:
+    var(--space-3)
+    max(var(--space-4), env(safe-area-inset-right))
+    calc(var(--space-3) + env(safe-area-inset-bottom))
+    max(var(--space-4), env(safe-area-inset-left));
   border-top: 1.5px solid var(--line);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: blur(8px);
@@ -645,6 +653,11 @@
       "hint hint solution solution alt alt"
       "reset reset rotate rotate record record"
       "next next next next next next";
+  }
+
+  /* Zameraný prvok nahrávky (napr. „Stiahnuť video“) sa nezastaví pod prilepenou lištou */
+  .rec-area :focus {
+    scroll-margin-bottom: 14rem;
   }
 
   .controls [data-action="hint"] { grid-area: hint; }
@@ -684,9 +697,21 @@
   }
 }
 
-@media (width >= 600px) {
+/* Tablet: tlačidlá v jednom riadku; ak sa nezmestia, „Ďalšia úloha“ sa roztiahne na celý riadok
+   (flex namiesto mriežky, aby nevznikla osamotená bunka). */
+@media (600px <= width < 900px) {
   .controls {
-    grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .controls > .btn {
+    flex: 1 1 6.5rem;
+  }
+
+  .controls .btn-primary {
+    flex-direction: row;
+    min-height: var(--tap);
   }
 }
 
@@ -697,18 +722,85 @@
   }
 }
 
+/* Telefón na šírku: doska vľavo na výšku okna, zadanie a ovládanie vpravo */
+@media (height < 500px) and (600px <= width < 900px) {
+  .site-main {
+    padding-top: var(--space-3);
+  }
+
+  .brand-tagline {
+    display: none;
+  }
+
+  .play {
+    grid-template:
+      "board head" auto
+      "board message" auto
+      "board controls" 1fr
+      "rec rec" auto / minmax(0, 1fr) 14rem;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .play-head {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+
+  .play-title {
+    font-size: var(--step-1);
+  }
+
+  .moves {
+    grid-row: auto;
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .board-wrap {
+    align-self: start;
+  }
+
+  .board {
+    max-height: calc(100svh - 6.5rem);
+  }
+
+  .controls {
+    align-self: start;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    backdrop-filter: none;
+  }
+
+  .controls > .btn {
+    flex-basis: 6rem;
+  }
+
+  .controls > .btn-primary {
+    flex-basis: 100%;
+  }
+
+  .btn-tool {
+    flex-direction: row;
+    min-height: var(--tap);
+    padding: var(--space-1) var(--space-2);
+  }
+}
+
 /* Od 900 px: doska vľavo, panel ovládania vpravo */
 @media (width >= 900px) {
   .play {
     grid-template:
       "head head" auto
-      "board message" auto
-      "board controls" 1fr
+      "board controls" auto
+      "board message" 1fr
       "rec rec" auto / minmax(0, 1fr) 17rem;
     gap: var(--space-4) var(--space-5);
   }
 
   .message {
+    align-self: start;
     padding: var(--space-3) var(--space-4);
     border-left: 4px solid var(--accent);
     border-radius: var(--radius-sm);

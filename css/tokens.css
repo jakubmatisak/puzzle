@@ -14,6 +14,7 @@
 
   /* Drevo a zápalky */
   --wood: #c8894a;
+  --striker: #5a3a24;
   --stick-1: #f0c27b;
   --stick-2: #d59a4f;
   --head-1: #d6452b;
@@ -86,6 +87,7 @@
     --line-strong: #8a6f55;
     --frame: #a2876b;
     --wood: #a86f3a;
+    --striker: #4a2f1d;
     --accent: #f0864a;
     --accent-strong: #ffa36b;
     --on-accent: #1b1410;
