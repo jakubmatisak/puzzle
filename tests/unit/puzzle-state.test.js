@@ -118,8 +118,10 @@ describe('resetState a movesUsed', () => {
   it('reset = nový štart', () => {
     const p = num();
     const s = moveToSlot(createState(p), 'm0', 'c4.b', p.board);
-    expect(movesUsed(s, p)).toBeGreaterThanOrEqual(0);
-    expect(resetState(p)).toEqual(createState(p));
+    expect(movesUsed(s, p)).toBe(1);
+    const r = resetState(p);
+    expect(r).toEqual(createState(p));
+    expect(movesUsed(r, p)).toBe(0);
   });
 });
 
@@ -132,5 +134,48 @@ describe('solutionPlan', () => {
       { from: 'h1-0', to: 'tray' },
       { from: 'v0-1', to: 'tray' },
     ]);
+  });
+});
+
+describe('rotateMatch (R7: vždy uvoľní slot)', () => {
+  const romanBoard = () => {
+    const { types, slots } = layoutEquation(['V']);
+    return { board: buildBoard(slots), start: encodeText('V', types), solutions: [], mode: 'move', moves: 1 };
+  };
+  it('vl 75° -> 90° sa prichytí do c0.i', () => {
+    const p = romanBoard();
+    const s = createState(p);
+    const id = s.matches.find((m) => m.slot === 'c0.vl').id;
+    const m = rotateMatch(s, id, p.board).matches.find((x) => x.id === id);
+    expect([m.slot, m.angle]).toEqual(['c0.i', 90]);
+  });
+  it('ak sú všetky blízke sloty obsadené, ostane voľná s uhlom 90', () => {
+    const p = romanBoard();
+    const at = (id, slot) => {
+      const sl = p.board.slotById.get(slot);
+      return { id, slot, x: sl.x, y: sl.y, angle: sl.angle };
+    };
+    const s = { matches: [at('a', 'c0.vl'), at('b', 'c0.vr'), at('c', 'c0.i'), at('d', 'c0.xa'), at('e', 'c0.xb')] };
+    const m = rotateMatch(s, 'a', p.board).matches[0];
+    expect([m.slot, m.angle, m.x, m.y]).toEqual([null, 90, 21, 100]);
+  });
+  it('invariant: zápalka v slote má vždy uhol slotu', () => {
+    const p = num();
+    let s = createState(p);
+    for (let round = 0; round < 3; round++) {
+      for (const m of createState(p).matches) s = rotateMatch(s, m.id, p.board);
+    }
+    for (const m of s.matches) {
+      if (m.slot !== null) expect(m.angle).toBe(p.board.slotById.get(m.slot).angle);
+    }
+  });
+  it('nemení pôvodný stav a hádže pri neznámom id', () => {
+    const p = num();
+    const s = createState(p);
+    const before = structuredClone(s);
+    rotateMatch(s, 'm1', p.board);
+    moveToTray(s, 'm1', { x: 1, y: 2 });
+    expect(s).toEqual(before);
+    expect(() => rotateMatch(s, 'nope', p.board)).toThrow();
   });
 });

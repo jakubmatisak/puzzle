@@ -2,7 +2,7 @@
  * Nemenný stav úlohy: zápalky na doske. Každá funkcia vracia nový stav.
  * Zápalka = {id, slot, x, y, angle}; slot je null, ak leží mimo slotu.
  */
-import { angleDiff, rotateStep, findSnapSlot } from './geometry.js';
+import { rotateStep, findSnapSlot } from './geometry.js';
 
 export { trayPosition } from './board-model.js';
 
@@ -81,20 +81,19 @@ export function moveToTray(state, matchId, pos) {
 }
 
 /**
- * Otočí zápalku o krok (rotateStep). Ak stále sedí do svojho slotu (do 23°),
- * ostane v ňom; inak sa uvoľní a skúsi sa prichytiť do voľného slotu v dosahu.
+ * Otočí zápalku o krok (rotateStep). Zápalka sa vždy uvoľní zo svojho slotu
+ * a skúsi sa prichytiť do iného voľného slotu v dosahu (pôvodný slot sa
+ * nepočíta). Zápalka v slote tak má vždy presne uhol slotu.
  * @param {{matches:object[]}} state
  * @param {string} matchId
- * @param {{slots:object[], slotById:Map<string,object>}} board
+ * @param {{slots:object[]}} board
  * @returns {{matches:object[]}}
  */
 export function rotateMatch(state, matchId, board) {
   return updateMatch(state, matchId, (m) => {
     const angle = rotateStep(m.angle);
-    const own = m.slot === null ? null : board.slotById.get(m.slot);
-    if (own && angleDiff(angle, own.angle) <= 23) return { ...m, angle };
     const taken = occupied(state);
-    if (m.slot !== null) taken.delete(m.slot);
+    if (m.slot !== null) taken.add(m.slot); // pôvodný slot vylúčený
     const snap = findSnapSlot({ x: m.x, y: m.y, angle }, board.slots, taken);
     if (snap) return { ...m, slot: snap.id, x: snap.x, y: snap.y, angle: snap.angle };
     return { ...m, slot: null, angle };
