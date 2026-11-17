@@ -479,8 +479,8 @@
         "en": "Remove 3 matches so that exactly 1 triangle remains and no match is left over."
       },
       "hint": {
-        "sk": "Skús ponechať iba jeden malý trojuholník.",
-        "en": "Try keeping just one small triangle."
+        "sk": "Aj veľký trojuholník sa počíta.",
+        "en": "The big triangle counts too."
       }
     }
   ]
