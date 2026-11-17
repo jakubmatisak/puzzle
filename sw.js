@@ -4,6 +4,7 @@
  */
 const CACHE = 'zapalkovo-v1';
 const CACHE_PREFIX = 'zapalkovo-';
+const NETWORK_TIMEOUT_MS = 4000;
 
 /** Všetky statické súbory aplikácie (relatívne cesty, aby appka bežala v ľubovoľnom podpriečinku). */
 const APP_SHELL = [
@@ -40,12 +41,12 @@ const APP_SHELL = [
   './js/ui/canvas-renderer.js',
   './js/ui/game.js',
   './js/ui/home.js',
+  './js/ui/install-button.js',
   './js/ui/recorder.js',
   './js/ui/recording-ui.js',
   './js/ui/router.js',
-  './js/ui/install-button.js',
-  './js/ui/sw-register.js',
   './js/ui/sensors.js',
+  './js/ui/sw-register.js',
   './data/puzzles.json',
 ];
 
@@ -67,19 +68,34 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-/** Uloží čerstvú odpoveď (len úspešnú) do cache. */
+/** Uloží čerstvú odpoveď (len status 200) do cache; chyba pri ukladaní sa ignoruje. */
 async function updateCache(request, response) {
-  if (response.ok) {
-    const cache = await caches.open(CACHE);
-    await cache.put(request, response.clone());
+  if (response.status === 200) {
+    try {
+      const cache = await caches.open(CACHE);
+      await cache.put(request, response.clone());
+    } catch {
+      // ukladanie sa nepodarilo (plná cache…) – dobrú odpoveď aj tak vrátime
+    }
   }
   return response;
+}
+
+/** Sieťová požiadavka, ktorá sa po NETWORK_TIMEOUT_MS preruší (pomalé pripojenie → cache). */
+async function fetchWithTimeout(request) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS);
+  try {
+    return await fetch(request, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /** Najprv sieť (a aktualizuj cache); pri výpadku odpoveď z cache, pre navigáciu index.html. */
 async function networkFirst(request) {
   try {
-    return await updateCache(request, await fetch(request));
+    return await updateCache(request, await fetchWithTimeout(request));
   } catch (error) {
     const cached = await caches.match(request, { ignoreSearch: true });
     if (cached) return cached;

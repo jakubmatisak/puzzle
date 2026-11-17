@@ -8,7 +8,6 @@ async function installAndControl(page) {
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.reload();
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
-  // sw.js predcachuje všetko pri install; ready znamená aktivovaný SW
 }
 
 test.describe('PWA', () => {
@@ -50,13 +49,28 @@ test.describe('PWA', () => {
     const page = await context.newPage();
     await installAndControl(page);
     await context.setOffline(true);
-    await page.goto('./#/play/numbers');
+    await page.evaluate(() => { location.hash = '#/play/numbers'; });
     await page.reload();
     await expect(page.locator('#board .match').first()).toBeVisible();
     await page.goto('./#/');
     await expect(page.locator('#categories .category-card')).toHaveCount(3);
     await context.setOffline(false);
     await page.reload();
+    await expect(page.locator('#categories .category-card')).toHaveCount(3);
+    await context.close();
+  });
+});
+
+test.describe('offline navigation', () => {
+  test('deep link with ?puzzle= and a real query string work offline', async ({ browser }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await installAndControl(page);
+    await context.setOffline(true);
+    await page.evaluate(() => { location.hash = '#/play/numbers?puzzle=num-01'; });
+    await page.reload();
+    await expect(page.locator('#board .match').first()).toBeVisible();
+    await page.goto('./?x=1#/');
     await expect(page.locator('#categories .category-card')).toHaveCount(3);
     await context.close();
   });
