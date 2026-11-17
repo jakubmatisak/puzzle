@@ -6,9 +6,9 @@ Záverečné zadanie z predmetu WEBTE1 (ZS 2026/27).
 
 Autori: Meno Priezvisko, Meno Priezvisko
 
-![Domovská obrazovka Zápalkova](docs/img/home.png)
+![Domovská obrazovka Zápalkova](docs/img/home.jpg)
 
-![Hra – rovnica 9 + 4 = 5](docs/img/play.png)
+![Hra – rovnica 9 + 4 = 5](docs/img/play.jpg)
 
 ## Čo hra spĺňa (body zadania)
 
